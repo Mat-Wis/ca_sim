@@ -1,0 +1,9 @@
+Layers:
+- cells -- tumor, immune
+- ECM -- binary? density?
+- oxygen -- constant concentration source? vasculature?
+- tumor toxine
+- recruitment substance -- only tumor cells? immune cells?
+
+Immune cells randomly appear in free sites -- constant number of immune cells? or dependent on recruitment substance level?
+Immune cells die after some time or if they kill some number of tumor cells.

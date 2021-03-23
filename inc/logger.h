@@ -1,10 +1,11 @@
 #pragma once
 
 #include "matio.h"
+#include "sim.h"
 
 class Logger {
 	public:
-		Logger(void* cells, void* oxygen, void* nutrient, void* toxin, size_t size, char* filename);
+		Logger(Sim& sim);
 		~Logger();
 
 		void log();
@@ -13,7 +14,8 @@ class Logger {
 		mat_t* file;
 		matvar_t* cells_var;
 		matvar_t* oxygen_var;
-		matvar_t* nutrient_var;
 		matvar_t* toxin_var;
 
+		void saveParam(int* var, const char* name);
+		void saveParam(float* var, const char* name);
 };

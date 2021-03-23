@@ -1,21 +1,20 @@
 #include <iostream>
-#include <cstring>
-#include <random>
 #include "logger.h"
+#include "sim.h"
 
-
-constexpr size_t size = 100;
-char filename[] = "../vis/data.mat";
-
-int cells[size][size];
-float oxygen[size][size];
-float nutrient[size][size];
-float toxin[size][size];
-float temp[size][size];
+char config_file[] = "../config.cfg";
 
 int main()
 {
-	Logger logger((void *)&cells, (void *)&oxygen, (void *)&nutrient, (void *)&toxin, size, filename);
+	Sim sim(config_file);
+	Logger logger(sim);
+
+	for(int n = 0; n < 1000; n++) {
+		sim.diffuse();
+		sim.oxygenate();
+		sim.uptake_ox();
+		logger.log();
+	}
 
 	return 0;
 }
