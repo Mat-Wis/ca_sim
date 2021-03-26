@@ -9,9 +9,10 @@ int main()
 	Sim sim(config_file);
 	Logger logger(sim);
 
-	for(int n = 0; n < 1000; n++) {
+	for(int n = 0; n < 1000; ++n) {
 		sim.diffuse();
 		sim.oxygenate();
+		sim.secrete_toxin();
 		sim.uptake_ox();
 		logger.log();
 	}

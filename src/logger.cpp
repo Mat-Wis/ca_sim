@@ -15,6 +15,11 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.diff_rate), "diff_rate");
 	saveParam(&(sim.ox_supply_level), "ox_supply_level");
 	saveParam(&(sim.ox_supply_rate), "ox_supply_rate");
+	saveParam(&(sim.healthy_ox_rate), "healthy_ox_rate");
+	saveParam(&(sim.immune_ox_rate), "immune_ox_rate");
+	saveParam(&(sim.tumor_ox_rate), "tumor_ox_rate");
+	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
+	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
 }
 
 Logger::~Logger() {

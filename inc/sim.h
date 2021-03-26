@@ -10,7 +10,7 @@
 enum class Cell : int { 
 	Empty	= 0,
 	Healthy	= 10, 
-	Tumor	= 20, 
+	Tumor	= 20,
 	Immune	= 30
 };
 
@@ -19,19 +19,21 @@ class Sim {
 		Sim(char* config_file);
 		~Sim();
 
-		void* get_cells_ptr();
-		void* get_oxygen_ptr();
-		void* get_toxin_ptr();
-
 		void diffuse();
 		void oxygenate();
+		void secrete_toxin();
 		void uptake_ox();
+		void move_immune();
+		void hypoxia();
+		void proliferate();
 
 		static constexpr size_t size = 100;
 
 	private:
 		/* MATRICES */
 		Cell cells[size][size];
+		Cell immune[size][size];
+		int prolif_cnt[size][size];
 		float oxygen[size][size];
 		float toxin[size][size];
 
@@ -46,6 +48,10 @@ class Sim {
 		float healthy_ox_rate;
 		float immune_ox_rate;
 		float tumor_ox_rate;
+		float ox_surv_thr;
+		float ox_prolif_thr;
+		float toxin_secrete_rate;
+		float init_immune_ratio;
 
 		/* Functions */
 		template<class T>
