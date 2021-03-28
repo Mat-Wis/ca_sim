@@ -1,6 +1,9 @@
 #include "sim.h"
 
-Sim::Sim(char* config_file) {
+Sim::Sim(char* config_file) : 
+	gen(std::chrono::system_clock::now().time_since_epoch().count()), 
+	dist_1(-1, 1)
+{
 	libconfig::Config cfg;
 
 	try {
@@ -27,21 +30,19 @@ Sim::Sim(char* config_file) {
 	read_param<float>(parameters, "tumor_ox_rate", tumor_ox_rate);
 	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
+	read_param<int>(parameters, "t_cycle", t_cycle);
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			cells[i][j] = Cell::Empty;
-		}
-	}
-
-	for(size_t i = 20; i < 40; ++i) {
-		for(size_t j = 20; j < 40; ++j) {
 			cells[i][j] = Cell::Healthy;
 		}
 	}
-	for(size_t i = 20; i < 40; ++i) {
-		for(size_t j = 60; j < 80; ++j) {
-			cells[i][j] = Cell::Tumor;
+
+	for(size_t i = 40; i < 60; ++i) {
+		for(size_t j = 40; j < 60; ++j) {
+			if((i-50)*(i-50) + (j-50)*(j-50) <= 100) {
+				cells[i][j] = Cell::Tumor;
+			}
 		}
 	}
 
@@ -51,14 +52,14 @@ Sim::Sim(char* config_file) {
 		}
 	}
 
-	std::default_random_engine gen;
-	std::uniform_real_distribution<float> dist;
+	std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
+	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	float num;
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			num = dist(gen);
-			if(num < init_immune_ratio) {
+			if(num <= init_immune_ratio) {
 				immune[i][j] = Cell::Immune;
 			}
 		}
@@ -90,10 +91,6 @@ void Sim::diffuse() {
 		case 6:
 			diffuse_6_my(oxygen);
 			diffuse_6_my(toxin);
-			break;
-		case 7:
-			diffuse_6_ext(oxygen);
-			diffuse_6_ext(toxin);
 			break;
 		default:
 			break;
@@ -221,38 +218,6 @@ void Sim::diffuse_6_my(float subst[size][size]) {
 		}
 	}
 }
-void Sim::diffuse_6_ext(float subst[size][size]) {
-	float d;
-
-	std::memcpy(temp_float, subst, size * size * sizeof(float));
-	for(size_t i = 1; i < size-1; ++i) {
-		for(size_t j = 1; j < size-1; ++j) {
-			d = temp_float[i][j] - temp_float[i-1][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i-1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j+1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j+1] += d * diff_rate;
-		}
-	}
-}
 
 void Sim::oxygenate() {
 	float d;
@@ -298,17 +263,16 @@ void Sim::uptake_ox() {
 }
 
 void Sim::move_immune() {
-	std::default_random_engine gen;
-	std::uniform_int_distribution<int> dist(-1, 1);
 	int x, y;
 	
-	for(size_t i = 1; i < size-1; ++i) {
-		for(size_t j = 1; j < size-1; ++j) {
-			if(immune[i][j] == Cell::Immune) {
-				x = dist(gen);
-				y = dist(gen);
-				
-				if(immune[i+x][j+y] == Cell::Empty) {
+	memcpy(temp_cell, immune, size * size * sizeof(Cell));
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(temp_cell[i][j] == Cell::Immune) {
+				x = dist_1(gen);
+				y = dist_1(gen);
+
+				if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && temp_cell[i+x][j+y] == Cell::Empty && immune[i+x][j+y] == Cell::Empty) {
 					immune[i][j] = Cell::Empty;
 					immune[i+x][j+y] = Cell::Immune;
 				}
@@ -317,13 +281,44 @@ void Sim::move_immune() {
 	}
 }
 
+inline void Sim::cell_die(size_t i, size_t j) {
+	cells[i][j] = Cell::Empty;
+	prolif_cnt[i][j] = 0;
+}
+
+inline void Sim::immune_die(size_t i, size_t j) {
+	immune[i][j] = Cell::Empty;
+}
+
+void Sim::kill_tumor() {
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
+				cell_die(i, j);
+			}
+		}
+	}
+}
+
+//void Sim::proliferate() {
+	//size_t x, y;
+	//std::vector<size_t> i_vec;
+	//std::vector<size_t> j_vec;
+
+	//for(size_t i = 0; i < size; ++i) {
+		//for(size_t j = 0; j < size; ++j) {
+			//if(cells[i][j] == Cell::Tumor) {
+				//++prolif_cnt[i][j];
+				//if(prolif_cnt[i][j] >= t_cycle) {
+					
+//}
+
 void Sim::hypoxia() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			if(oxygen[i][j] < ox_surv_thr) {
-				cells[i][j] = Cell::Empty;
-				immune[i][j] = Cell::Empty;
-				prolif_cnt[i][j] = 0;
+				cell_die(i, j);
+				immune_die(i, j);
 			}
 		}
 	}

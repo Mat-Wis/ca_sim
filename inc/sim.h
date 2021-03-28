@@ -5,6 +5,8 @@
 #include <cstring>
 #include <string>
 #include <random>
+#include <chrono>
+#include <vector>
 #include <libconfig.h++>
 
 enum class Cell : int { 
@@ -24,12 +26,13 @@ class Sim {
 		void secrete_toxin();
 		void uptake_ox();
 		void move_immune();
+		void kill_tumor();
 		void hypoxia();
 		void proliferate();
 
-		static constexpr size_t size = 100;
-
 	private:
+		static constexpr size_t size = 100;
+		
 		/* MATRICES */
 		Cell cells[size][size];
 		Cell immune[size][size];
@@ -37,6 +40,7 @@ class Sim {
 		float oxygen[size][size];
 		float toxin[size][size];
 
+		Cell temp_cell[size][size];
 		int temp_int[size][size];
 		float temp_float[size][size];
 		
@@ -52,6 +56,11 @@ class Sim {
 		float ox_prolif_thr;
 		float toxin_secrete_rate;
 		float init_immune_ratio;
+		int t_cycle;
+
+		/* Random numbers */
+		std::default_random_engine gen;
+		std::uniform_int_distribution<int> dist_1;
 
 		/* Functions */
 		template<class T>
@@ -60,7 +69,9 @@ class Sim {
 		void diffuse_4(float subst[size][size]);
 		void diffuse_8(float subst[size][size]);
 		void diffuse_6_my(float subst[size][size]);
-		void diffuse_6_ext(float subst[size][size]);
+
+		void cell_die(size_t i, size_t j);
+		void immune_die(size_t i, size_t j);
 
 		friend class Logger;
 		std::string logfile;

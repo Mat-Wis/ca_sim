@@ -13,6 +13,7 @@ class Logger {
 	private:
 		mat_t* file;
 		matvar_t* cells_var;
+		matvar_t* immune_var;
 		matvar_t* oxygen_var;
 		matvar_t* toxin_var;
 

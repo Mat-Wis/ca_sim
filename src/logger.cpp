@@ -8,6 +8,7 @@ Logger::Logger(Sim& sim) {
 	size_t dims[3] = {sim.size, sim.size, 1};
 
 	cells_var = Mat_VarCreate("cells", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.cells), MAT_F_DONT_COPY_DATA);
+	immune_var = Mat_VarCreate("immune", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.immune), MAT_F_DONT_COPY_DATA);
 	oxygen_var = Mat_VarCreate("oxygen", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.oxygen), MAT_F_DONT_COPY_DATA);
 	toxin_var = Mat_VarCreate("toxin", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.toxin), MAT_F_DONT_COPY_DATA);
 
@@ -20,6 +21,7 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.tumor_ox_rate), "tumor_ox_rate");
 	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
 	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
+	saveParam(&(sim.t_cycle), "t_cycle");
 }
 
 Logger::~Logger() {
@@ -46,6 +48,7 @@ void Logger::saveParam(float* var, const char* name) {
 
 void Logger::log() {
 	Mat_VarWriteAppend(file, cells_var, MAT_COMPRESSION_NONE, 3);
+	Mat_VarWriteAppend(file, immune_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, oxygen_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, toxin_var, MAT_COMPRESSION_NONE, 3);
 }
