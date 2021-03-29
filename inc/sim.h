@@ -59,8 +59,10 @@ class Sim {
 		int t_cycle;
 
 		/* Neighbourhood*/
-		static constexpr int nbr[nbrhood][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-		//static constexpr int nbr[nbrhood][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
+		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+		//static constexpr int nbr[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
+		//static constexpr int nbr_even[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+		//static constexpr int nbr_odd[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, 0}};
 
 		/* Random numbers */
 		std::default_random_engine gen;

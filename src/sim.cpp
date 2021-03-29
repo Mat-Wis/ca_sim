@@ -38,8 +38,8 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
-	for(size_t i = 40; i < 60; ++i) {
-		for(size_t j = 40; j < 60; ++j) {
+	for(size_t i = 40; i <= 60; ++i) {
+		for(size_t j = 40; j <= 60; ++j) {
 			if((i-50)*(i-50) + (j-50)*(j-50) <= 100) {
 				cells[i][j] = Cell::Tumor;
 			}
@@ -220,6 +220,13 @@ void Sim::proliferate() {
 					j_vec.clear();
 					
 					for(int n = 0; n < nbrhood; ++n) {
+						//if(j % 2) {
+							//x = nbr_even[n][0];
+							//y = nbr_even[n][1];
+						//} else {
+							//x = nbr_odd[n][0];
+							//y = nbr_odd[n][1];
+						//}
 						x = nbr[n][0];
 						y = nbr[n][1];
 
