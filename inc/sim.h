@@ -27,6 +27,7 @@ class Sim {
 		void uptake_ox();
 		void move_immune();
 		void kill_tumor();
+		void kill_immune();
 		void hypoxia();
 		void proliferate();
 
@@ -38,6 +39,7 @@ class Sim {
 		Cell cells[size][size];
 		Cell immune[size][size];
 		int prolif_cnt[size][size];
+		int kill_cnt[size][size];
 		float oxygen[size][size];
 		float toxin[size][size];
 
@@ -57,6 +59,7 @@ class Sim {
 		float toxin_secrete_rate;
 		float init_immune_ratio;
 		int t_cycle;
+		int kill_limit;
 
 		/* Neighbourhood*/
 		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};

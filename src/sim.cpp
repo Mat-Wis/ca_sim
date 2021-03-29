@@ -27,14 +27,17 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "healthy_ox_rate", healthy_ox_rate);
 	read_param<float>(parameters, "immune_ox_rate", immune_ox_rate);
 	read_param<float>(parameters, "tumor_ox_rate", tumor_ox_rate);
+	read_param<float>(parameters, "ox_surv_thr", ox_surv_thr);
+	read_param<float>(parameters, "ox_prolif_thr", ox_prolif_thr);
 	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<int>(parameters, "t_cycle", t_cycle);
+	read_param<int>(parameters, "kill_limit", kill_limit);
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			//cells[i][j] = Cell::Healthy;
-			cells[i][j] = Cell::Empty;
+			cells[i][j] = Cell::Healthy;
+			//cells[i][j] = Cell::Empty;
 		}
 	}
 
@@ -49,6 +52,8 @@ Sim::Sim(char* config_file) :
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			oxygen[i][j] = 0.9;
+			prolif_cnt[i][j] = 0;
+			kill_cnt[i][j] = 0;
 		}
 	}
 
@@ -180,6 +185,8 @@ void Sim::move_immune() {
 				if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && temp_cell[i+x][j+y] == Cell::Empty && immune[i+x][j+y] == Cell::Empty) {
 					immune[i][j] = Cell::Empty;
 					immune[i+x][j+y] = Cell::Immune;
+					kill_cnt[i+x][j+y] = kill_cnt[i][j];
+					kill_cnt[i][j] = 0;
 				}
 			}
 		}
@@ -193,6 +200,7 @@ inline void Sim::cell_die(size_t i, size_t j) {
 
 inline void Sim::immune_die(size_t i, size_t j) {
 	immune[i][j] = Cell::Empty;
+	kill_cnt[i][j] = 0;
 }
 
 void Sim::kill_tumor() {
@@ -200,6 +208,17 @@ void Sim::kill_tumor() {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
 				cell_die(i, j);
+				++kill_cnt[i][j];
+			}
+		}
+	}
+}
+
+void Sim::kill_immune() {
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(immune[i][j] == Cell::Immune && kill_cnt[i][j] >= kill_limit) {
+				immune_die(i, j);
 			}
 		}
 	}
@@ -213,7 +232,7 @@ void Sim::proliferate() {
 
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
-			if(cells[i][j] == Cell::Tumor) {
+			if(cells[i][j] == Cell::Tumor && prolif_cnt[i][j] > ox_prolif_thr) {
 				++prolif_cnt[i][j];
 				if(prolif_cnt[i][j] >= t_cycle) {
 					i_vec.clear();
@@ -243,16 +262,6 @@ void Sim::proliferate() {
 						y = j_vec[n];
 
 						cells[x][y] = Cell::Tumor;
-
-						//for(auto const& v : i_vec) {
-							//std::cout << v << '\t';
-						//}
-						//std::cout << std::endl << x << std::endl;
-						//for(auto const& v : j_vec) {
-							//std::cout << v << '\t';
-						//}
-						//std::cout << std::endl << y << std::endl;
-						//std::cin >> n;
 					}
 				}
 			}
@@ -265,7 +274,7 @@ void Sim::hypoxia() {
 		for(size_t j = 0; j < size; ++j) {
 			if(oxygen[i][j] < ox_surv_thr) {
 				cell_die(i, j);
-				immune_die(i, j);
+				//immune_die(i, j);
 			}
 		}
 	}
