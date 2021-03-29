@@ -15,7 +15,8 @@ int main()
 		sim.secrete_toxin();
 		sim.uptake_ox();
 		sim.move_immune();
-		sim.kill_tumor();
+		//sim.kill_tumor();
+		sim.proliferate();
 		logger.log();
 	}
 

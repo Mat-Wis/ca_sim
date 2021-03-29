@@ -21,7 +21,6 @@ Sim::Sim(char* config_file) :
 	const libconfig::Setting& parameters = root["parameters"];
 
 	read_param<std::string>(root, "logfile", logfile);
-	read_param<int>(parameters, "nbrhood", nbrhood);
 	read_param<float>(parameters, "diff_rate", diff_rate);
 	read_param<float>(parameters, "ox_supply_level", ox_supply_level);
 	read_param<float>(parameters, "ox_supply_rate", ox_supply_rate);
@@ -34,7 +33,8 @@ Sim::Sim(char* config_file) :
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			cells[i][j] = Cell::Healthy;
+			//cells[i][j] = Cell::Healthy;
+			cells[i][j] = Cell::Empty;
 		}
 	}
 
@@ -79,48 +79,11 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 }
 
 void Sim::diffuse() {
-	switch(nbrhood) {
-		case 4:
-			diffuse_4(oxygen);
-			diffuse_4(toxin);
-			break;
-		case 8:
-			diffuse_8(oxygen);
-			diffuse_8(toxin);
-			break;
-		case 6:
-			diffuse_6_my(oxygen);
-			diffuse_6_my(toxin);
-			break;
-		default:
-			break;
-	}
+	diffuse_(oxygen);
+	diffuse_(toxin);
 }
-void Sim::diffuse_4(float subst[size][size]) {
-	float d;
 
-	std::memcpy(temp_float, subst, size * size * sizeof(float));
-	for(size_t i = 1; i < size-1; ++i) {
-		for(size_t j = 1; j < size-1; ++j) {
-			d = temp_float[i][j] - temp_float[i-1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j+1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j] += d * diff_rate;
-		}
-	}
-}
-void Sim::diffuse_8(float subst[size][size]) {
+void Sim::diffuse_(float subst[size][size]) {
 	float d;
 
 	std::memcpy(temp_float, subst, size * size * sizeof(float));
@@ -157,64 +120,6 @@ void Sim::diffuse_8(float subst[size][size]) {
 			d = temp_float[i][j] - temp_float[i+1][j+1];
 			subst[i][j] -= d * diff_rate;
 			subst[i+1][j+1] += d * diff_rate;
-		}
-	}
-}
-void Sim::diffuse_6_my(float subst[size][size]) {
-	float d;
-
-	std::memcpy(temp_float, subst, size * size * sizeof(float));
-	for(size_t i = 1; i < size-1; ++i) {
-		for(size_t j = 1; j < size-1; ++j) {
-			if(j % 2) { // i % 2
-				d = temp_float[i][j] - temp_float[i-1][j];
-				subst[i][j] -= d * diff_rate;
-				subst[i-1][j] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i][j-1];
-				subst[i][j] -= d * diff_rate;
-				subst[i][j-1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i][j+1];
-				subst[i][j] -= d * diff_rate;
-				subst[i][j+1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i+1][j-1];
-				subst[i][j] -= d * diff_rate;
-				subst[i+1][j-1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i+1][j];
-				subst[i][j] -= d * diff_rate;
-				subst[i+1][j] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i+1][j+1];
-				subst[i][j] -= d * diff_rate;
-				subst[i+1][j+1] += d * diff_rate;
-			} else {
-				d = temp_float[i][j] - temp_float[i-1][j-1];
-				subst[i][j] -= d * diff_rate;
-				subst[i-1][j-1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i-1][j];
-				subst[i][j] -= d * diff_rate;
-				subst[i-1][j] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i-1][j+1];
-				subst[i][j] -= d * diff_rate;
-				subst[i-1][j+1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i][j-1];
-				subst[i][j] -= d * diff_rate;
-				subst[i][j-1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i][j+1];
-				subst[i][j] -= d * diff_rate;
-				subst[i][j+1] += d * diff_rate;
-
-				d = temp_float[i][j] - temp_float[i+1][j];
-				subst[i][j] -= d * diff_rate;
-				subst[i+1][j] += d * diff_rate;
-			}
 		}
 	}
 }
@@ -300,18 +205,53 @@ void Sim::kill_tumor() {
 	}
 }
 
-//void Sim::proliferate() {
-	//size_t x, y;
-	//std::vector<size_t> i_vec;
-	//std::vector<size_t> j_vec;
+void Sim::proliferate() {
+	int x, y;
+	int n;
+	std::vector<int> i_vec;
+	std::vector<int> j_vec;
 
-	//for(size_t i = 0; i < size; ++i) {
-		//for(size_t j = 0; j < size; ++j) {
-			//if(cells[i][j] == Cell::Tumor) {
-				//++prolif_cnt[i][j];
-				//if(prolif_cnt[i][j] >= t_cycle) {
+	for(size_t i = 1; i < size-1; ++i) {
+		for(size_t j = 1; j < size-1; ++j) {
+			if(cells[i][j] == Cell::Tumor) {
+				++prolif_cnt[i][j];
+				if(prolif_cnt[i][j] >= t_cycle) {
+					i_vec.clear();
+					j_vec.clear();
 					
-//}
+					for(int n = 0; n < nbrhood; ++n) {
+						x = nbr[n][0];
+						y = nbr[n][1];
+
+						if(cells[i+x][j+y] == Cell::Empty) {
+							i_vec.push_back(i+x);
+							j_vec.push_back(j+y);
+						}
+					}
+
+					if(!i_vec.empty()) {
+						std::uniform_int_distribution<int> dist_n(0, i_vec.size()-1);
+						n = dist_n(gen);
+						x = i_vec[n];
+						y = j_vec[n];
+
+						cells[x][y] = Cell::Tumor;
+
+						//for(auto const& v : i_vec) {
+							//std::cout << v << '\t';
+						//}
+						//std::cout << std::endl << x << std::endl;
+						//for(auto const& v : j_vec) {
+							//std::cout << v << '\t';
+						//}
+						//std::cout << std::endl << y << std::endl;
+						//std::cin >> n;
+					}
+				}
+			}
+		}
+	}
+}
 
 void Sim::hypoxia() {
 	for(size_t i = 0; i < size; ++i) {

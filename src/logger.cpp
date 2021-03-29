@@ -12,7 +12,6 @@ Logger::Logger(Sim& sim) {
 	oxygen_var = Mat_VarCreate("oxygen", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.oxygen), MAT_F_DONT_COPY_DATA);
 	toxin_var = Mat_VarCreate("toxin", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.toxin), MAT_F_DONT_COPY_DATA);
 
-	saveParam(&(sim.nbrhood), "nbrhood");
 	saveParam(&(sim.diff_rate), "diff_rate");
 	saveParam(&(sim.ox_supply_level), "ox_supply_level");
 	saveParam(&(sim.ox_supply_rate), "ox_supply_rate");

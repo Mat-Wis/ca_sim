@@ -32,8 +32,9 @@ class Sim {
 
 	private:
 		static constexpr size_t size = 100;
+		static constexpr int nbrhood = 8;
 		
-		/* MATRICES */
+		/* Matrices */
 		Cell cells[size][size];
 		Cell immune[size][size];
 		int prolif_cnt[size][size];
@@ -45,7 +46,6 @@ class Sim {
 		float temp_float[size][size];
 		
 		/* Parameters */
-		int nbrhood;
 		float diff_rate;
 		float ox_supply_level;
 		float ox_supply_rate;
@@ -58,6 +58,10 @@ class Sim {
 		float init_immune_ratio;
 		int t_cycle;
 
+		/* Neighbourhood*/
+		static constexpr int nbr[nbrhood][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
+		//static constexpr int nbr[nbrhood][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
+
 		/* Random numbers */
 		std::default_random_engine gen;
 		std::uniform_int_distribution<int> dist_1;
@@ -66,9 +70,7 @@ class Sim {
 		template<class T>
 		void read_param(const libconfig::Setting& setting, const char* name, T& var);
 
-		void diffuse_4(float subst[size][size]);
-		void diffuse_8(float subst[size][size]);
-		void diffuse_6_my(float subst[size][size]);
+		void diffuse_(float subst[size][size]);
 
 		void cell_die(size_t i, size_t j);
 		void immune_die(size_t i, size_t j);
