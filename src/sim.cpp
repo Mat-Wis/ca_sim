@@ -30,6 +30,7 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "ox_surv_thr", ox_surv_thr);
 	read_param<float>(parameters, "ox_prolif_thr", ox_prolif_thr);
 	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
+	read_param<float>(parameters, "toxin_thr", toxin_thr);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
@@ -224,6 +225,16 @@ void Sim::kill_immune() {
 	}
 }
 
+void Sim::kill_healthy() {
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(cells[i][j] == Cell::Healthy && toxin[i][j] >= toxin_thr) {
+				cell_die(i, j);
+			}
+		}
+	}
+}
+
 void Sim::proliferate() {
 	int x, y;
 	int n;
@@ -232,7 +243,7 @@ void Sim::proliferate() {
 
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
-			if(cells[i][j] == Cell::Tumor && prolif_cnt[i][j] > ox_prolif_thr) {
+			if(cells[i][j] == Cell::Tumor && oxygen[i][j] > ox_prolif_thr) {
 				++prolif_cnt[i][j];
 				if(prolif_cnt[i][j] >= t_cycle) {
 					i_vec.clear();

@@ -28,6 +28,7 @@ class Sim {
 		void move_immune();
 		void kill_tumor();
 		void kill_immune();
+		void kill_healthy();
 		void hypoxia();
 		void proliferate();
 
@@ -57,6 +58,7 @@ class Sim {
 		float ox_surv_thr;
 		float ox_prolif_thr;
 		float toxin_secrete_rate;
+		float toxin_thr;
 		float init_immune_ratio;
 		int t_cycle;
 		int kill_limit;

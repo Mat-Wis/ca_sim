@@ -17,6 +17,7 @@ int main()
 		sim.move_immune();
 		sim.kill_tumor();
 		sim.kill_immune();
+		sim.kill_healthy();
 		sim.hypoxia();
 		sim.proliferate();
 		logger.log();
