@@ -31,6 +31,9 @@ class Sim {
 		void kill_healthy();
 		void hypoxia();
 		void proliferate();
+		void recruitImmune();
+
+		int n_steps;
 
 	private:
 		static constexpr size_t size = 100;
@@ -41,6 +44,7 @@ class Sim {
 		Cell immune[size][size];
 		int prolif_cnt[size][size];
 		int kill_cnt[size][size];
+		int life_cnt[size][size];
 		float oxygen[size][size];
 		float toxin[size][size];
 
@@ -62,6 +66,7 @@ class Sim {
 		float init_immune_ratio;
 		int t_cycle;
 		int kill_limit;
+		int life_limit;
 
 		/* Neighbourhood*/
 		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};

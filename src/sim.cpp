@@ -34,6 +34,8 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
+	read_param<int>(parameters, "life_limit", life_limit);
+	read_param<int>(parameters, "n_steps", n_steps);
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
@@ -55,10 +57,10 @@ Sim::Sim(char* config_file) :
 			oxygen[i][j] = 0.9;
 			prolif_cnt[i][j] = 0;
 			kill_cnt[i][j] = 0;
+			life_cnt[i][j] = 0;
 		}
 	}
 
-	std::default_random_engine gen(std::chrono::system_clock::now().time_since_epoch().count());
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	float num;
 
@@ -188,6 +190,8 @@ void Sim::move_immune() {
 					immune[i+x][j+y] = Cell::Immune;
 					kill_cnt[i+x][j+y] = kill_cnt[i][j];
 					kill_cnt[i][j] = 0;
+					life_cnt[i+x][j+y] = life_cnt[i][j];
+					life_cnt[i][j] = 0;
 				}
 			}
 		}
@@ -202,14 +206,25 @@ inline void Sim::cell_die(size_t i, size_t j) {
 inline void Sim::immune_die(size_t i, size_t j) {
 	immune[i][j] = Cell::Empty;
 	kill_cnt[i][j] = 0;
+	life_cnt[i][j] = 0;
 }
 
 void Sim::kill_tumor() {
+	std::uniform_int_distribution<int> dist_5(-5, 5);
+	std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
+	int x, y;
+
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
 				cell_die(i, j);
 				++kill_cnt[i][j];
+
+				x = dist_5(gen);
+				y = dist_5(gen);
+				if(immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
+					immune[i+x][j+y] = Cell::Immune;
+				}
 			}
 		}
 	}
@@ -218,8 +233,11 @@ void Sim::kill_tumor() {
 void Sim::kill_immune() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(immune[i][j] == Cell::Immune && kill_cnt[i][j] >= kill_limit) {
-				immune_die(i, j);
+			if(immune[i][j] == Cell::Immune) {
+				++life_cnt[i][j];
+				if((kill_cnt[i][j] >= kill_limit || life_cnt[i][j] >= life_limit)) {
+					immune_die(i, j);
+				}
 			}
 		}
 	}
@@ -230,6 +248,17 @@ void Sim::kill_healthy() {
 		for(size_t j = 0; j < size; ++j) {
 			if(cells[i][j] == Cell::Healthy && toxin[i][j] >= toxin_thr) {
 				cell_die(i, j);
+			}
+		}
+	}
+}
+
+void Sim::hypoxia() {
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(oxygen[i][j] < ox_surv_thr) {
+				cell_die(i, j);
+				//immune_die(i, j);
 			}
 		}
 	}
@@ -280,13 +309,16 @@ void Sim::proliferate() {
 	}
 }
 
-void Sim::hypoxia() {
+void Sim::recruitImmune() {
+	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+	float num;
+
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(oxygen[i][j] < ox_surv_thr) {
-				cell_die(i, j);
-				//immune_die(i, j);
+			num = dist(gen);
+			if(num <= init_immune_ratio / life_limit && immune[i][j] == Cell::Empty) {
+				immune[i][j] = Cell::Immune;
 			}
 		}
-	}
+	}	
 }

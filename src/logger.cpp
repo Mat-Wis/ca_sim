@@ -23,6 +23,7 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
 	saveParam(&(sim.t_cycle), "t_cycle");
 	saveParam(&(sim.kill_limit), "kill_limit");
+	saveParam(&(sim.life_limit), "life_limit");
 }
 
 Logger::~Logger() {
