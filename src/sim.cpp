@@ -175,21 +175,30 @@ void Sim::uptake_ox() {
 
 void Sim::move_immune() {
 	int x, y;
+	size_t i, j;
+	std::vector<Coord> immune_cells;
 	
-	memcpy(temp_cell, immune, size * size * sizeof(Cell));
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(temp_cell[i][j] == Cell::Immune) {
-				x = dist_1(gen);
-				y = dist_1(gen);
-
-				if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && temp_cell[i+x][j+y] == Cell::Empty && immune[i+x][j+y] == Cell::Empty) {
-					immune[i][j] = Cell::Empty;
-					immune[i+x][j+y] = Cell::Immune;
-					kill_cnt[i+x][j+y] = kill_cnt[i][j];
-					kill_cnt[i][j] = 0;
-				}
+			if(immune[i][j] == Cell::Immune) {
+				immune_cells.push_back({i, j});
 			}
+		}
+	}
+	std::random_shuffle(immune_cells.begin(), immune_cells.end());
+
+	for(auto const& c : immune_cells) {
+		i = c.x;
+		j = c.y;
+
+		x = dist_1(gen);
+		y = dist_1(gen);
+
+		if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && immune[i+x][j+y] == Cell::Empty) {
+			immune[i][j] = Cell::Empty;
+			immune[i+x][j+y] = Cell::Immune;
+			kill_cnt[i+x][j+y] = kill_cnt[i][j];
+			kill_cnt[i][j] = 0;
 		}
 	}
 }
@@ -238,43 +247,53 @@ void Sim::kill_healthy() {
 void Sim::proliferate() {
 	int x, y;
 	int n;
+	size_t i, j;
 	std::vector<int> i_vec;
 	std::vector<int> j_vec;
+	std::vector<Coord> tumor_cells;
 
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
 			if(cells[i][j] == Cell::Tumor && oxygen[i][j] > ox_prolif_thr) {
-				++prolif_cnt[i][j];
-				if(prolif_cnt[i][j] >= t_cycle) {
-					i_vec.clear();
-					j_vec.clear();
-					
-					for(int n = 0; n < nbrhood; ++n) {
-						//if(j % 2) {
-							//x = nbr_even[n][0];
-							//y = nbr_even[n][1];
-						//} else {
-							//x = nbr_odd[n][0];
-							//y = nbr_odd[n][1];
-						//}
-						x = nbr[n][0];
-						y = nbr[n][1];
+				tumor_cells.push_back({i, j});
+			}
+		}
+	}
+	std::random_shuffle(tumor_cells.begin(), tumor_cells.end());
 
-						if(cells[i+x][j+y] == Cell::Empty) {
-							i_vec.push_back(i+x);
-							j_vec.push_back(j+y);
-						}
-					}
+	for(auto const& c : tumor_cells) {
+		i = c.x;
+		j = c.y;
+		
+		++prolif_cnt[i][j];
+		if(prolif_cnt[i][j] >= t_cycle) {
+			i_vec.clear();
+			j_vec.clear();
+			
+			for(int n = 0; n < nbrhood; ++n) {
+				//if(j % 2) {
+					//x = nbr_even[n][0];
+					//y = nbr_even[n][1];
+				//} else {
+					//x = nbr_odd[n][0];
+					//y = nbr_odd[n][1];
+				//}
+				x = nbr[n][0];
+				y = nbr[n][1];
 
-					if(!i_vec.empty()) {
-						std::uniform_int_distribution<int> dist_n(0, i_vec.size()-1);
-						n = dist_n(gen);
-						x = i_vec[n];
-						y = j_vec[n];
-
-						cells[x][y] = Cell::Tumor;
-					}
+				if(0 <= i+x && i+x < size && 0 <= j+x && j+x < size && cells[i+x][j+y] == Cell::Empty) {
+					i_vec.push_back(i+x);
+					j_vec.push_back(j+y);
 				}
+			}
+
+			if(!i_vec.empty()) {
+				std::uniform_int_distribution<int> dist_n(0, i_vec.size()-1);
+				n = dist_n(gen);
+				x = i_vec[n];
+				y = j_vec[n];
+
+				cells[x][y] = Cell::Tumor;
 			}
 		}
 	}

@@ -7,6 +7,7 @@
 #include <random>
 #include <chrono>
 #include <vector>
+#include <algorithm>
 #include <libconfig.h++>
 
 enum class Cell : int { 
@@ -14,6 +15,11 @@ enum class Cell : int {
 	Healthy	= 10, 
 	Tumor	= 20,
 	Immune	= 30
+};
+
+struct Coord {
+	size_t x;
+	size_t y;
 };
 
 class Sim {
