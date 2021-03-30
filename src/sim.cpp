@@ -42,9 +42,9 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
-	for(size_t i = 40; i <= 60; ++i) {
-		for(size_t j = 40; j <= 60; ++j) {
-			if((i-50)*(i-50) + (j-50)*(j-50) <= 100) {
+	for(size_t i = size/2-10; i <= size/2+10; ++i) {
+		for(size_t j = size/2-10; j <= size/2+10; ++j) {
+			if((i-size/2)*(i-size/2) + (j-size/2)*(j-size/2) <= 100) {
 				cells[i][j] = Cell::Tumor;
 			}
 		}
