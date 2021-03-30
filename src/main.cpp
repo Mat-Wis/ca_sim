@@ -22,6 +22,10 @@ int main()
 		sim.hypoxia();
 		sim.proliferate();
 		logger.log();
+
+		if(n % 1000 == 0) {
+			std::cout << "n = " << n << std::endl;
+		}
 	}
 
 	return 0;
