@@ -10,9 +10,9 @@ int main()
 	Logger logger(sim);
 
 	for(int n = 0; n < sim.n_steps; ++n) {
+		sim.diffuse();
 		sim.uptake_ox();
 		sim.oxygenate();
-		sim.diffuse();
 		sim.secrete_toxin();
 		sim.move_immune();
 		sim.recruitImmune();

@@ -97,37 +97,8 @@ void Sim::diffuse_(float subst[size][size]) {
 	std::memcpy(temp_float, subst, size * size * sizeof(float));
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
-			d = temp_float[i][j] - temp_float[i-1][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i-1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i-1][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i-1][j+1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i][j+1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j-1];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j-1] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j] += d * diff_rate;
-
-			d = temp_float[i][j] - temp_float[i+1][j+1];
-			subst[i][j] -= d * diff_rate;
-			subst[i+1][j+1] += d * diff_rate;
+			d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
+			subst[i][j] += d * diff_rate;
 		}
 	}
 }
