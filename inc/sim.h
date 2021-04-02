@@ -37,7 +37,8 @@ class Sim {
 		void kill_healthy();
 		void hypoxia();
 		void proliferate();
-		void recruitImmune();
+		void recruit_immune();
+		void count_cells();
 
 		int n_steps;
 
@@ -79,6 +80,11 @@ class Sim {
 		//static constexpr int nbr[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
 		//static constexpr int nbr_even[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
 		//static constexpr int nbr_odd[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, 0}};
+		
+		/* Cell numbers */
+		int num_healthy;
+		int num_tumor;
+		int num_immune;
 
 		/* Random numbers */
 		std::default_random_engine gen;

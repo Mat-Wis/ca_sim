@@ -16,6 +16,9 @@ class Logger {
 		matvar_t* immune_var;
 		matvar_t* oxygen_var;
 		matvar_t* toxin_var;
+		matvar_t* num_healthy_var;
+		matvar_t* num_tumor_var;
+		matvar_t* num_immune_var;
 
 		void saveParam(int* var, const char* name);
 		void saveParam(float* var, const char* name);

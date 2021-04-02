@@ -16,18 +16,22 @@ colormap('hot');
 subplot(dims(n, 1), dims(n, 2), 1);
 f_cells = imagesc(cells(:, : ,1), [0, 30]);
 axis('equal');
+title('Cells');
 
 subplot(dims(n, 1), dims(n, 2), 2);
 f_immune = imagesc(immune(:, : ,1), [0, 30]);
 axis('equal');
+title('Immune cells');
 
 subplot(dims(n, 1), dims(n, 2), 3);
 f_ox = imagesc(oxygen(:, :, 1), [0, 1]);
 axis('equal');
+title('Oxygen');
 
 subplot(dims(n, 1), dims(n, 2), 4);
 f_tox = imagesc(toxin(:, :, 1), [0, 1]);
 axis('equal');
+title('Toxin');
 
 waitforbuttonpress;
 

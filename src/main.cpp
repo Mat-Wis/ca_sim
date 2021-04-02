@@ -15,12 +15,13 @@ int main()
 		sim.oxygenate();
 		sim.secrete_toxin();
 		sim.move_immune();
-		sim.recruitImmune();
+		sim.recruit_immune();
 		sim.kill_tumor();
 		sim.kill_immune();
 		sim.kill_healthy();
 		sim.hypoxia();
 		sim.proliferate();
+		sim.count_cells();
 		logger.log();
 
 		if(n % 1000 == 0) {

@@ -299,7 +299,7 @@ void Sim::proliferate() {
 	}
 }
 
-void Sim::recruitImmune() {
+void Sim::recruit_immune() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	float num;
 
@@ -311,4 +311,28 @@ void Sim::recruitImmune() {
 			}
 		}
 	}	
+}
+
+void Sim::count_cells() {
+	num_healthy = 0;
+	num_tumor = 0;
+	num_immune = 0;
+
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(immune[i][j] == Cell::Immune) {
+				++num_immune;
+			}
+			switch(cells[i][j]) {
+				case Cell::Healthy:
+					++num_healthy;
+					break;
+				case Cell::Tumor:
+					++num_tumor;
+					break;
+				default:
+					break;
+			}
+		}
+	}
 }
