@@ -11,10 +11,11 @@
 #include <libconfig.h++>
 
 enum class Cell : int { 
-	Empty	= 0,
-	Healthy	= 10, 
-	Tumor	= 20,
-	Immune	= 30
+	Empty		= 0,
+	Healthy		= 10, 
+	Tumor		= 20,
+	DeadTumor	= 30,
+	Immune		= 40
 };
 
 struct Coord {
@@ -98,7 +99,8 @@ class Sim {
 
 		void diffuse_(float subst[size][size]);
 
-		void cell_die(size_t i, size_t j);
+		void healthy_die(size_t i, size_t j);
+		void tumor_die(size_t i, size_t j);
 		void immune_die(size_t i, size_t j);
 
 		friend class Logger;

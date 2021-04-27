@@ -183,8 +183,12 @@ void Sim::move_immune() {
 	}
 }
 
-inline void Sim::cell_die(size_t i, size_t j) {
+inline void Sim::healthy_die(size_t i, size_t j) {
 	cells[i][j] = Cell::Empty;
+}
+
+inline void Sim::tumor_die(size_t i, size_t j) {
+	cells[i][j] = Cell::DeadTumor;
 	prolif_cnt[i][j] = 0;
 }
 
@@ -202,7 +206,7 @@ void Sim::kill_tumor() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
-				cell_die(i, j);
+				tumor_die(i, j);
 				++kill_cnt[i][j];
 
 				x = dist_5(gen);
@@ -210,6 +214,9 @@ void Sim::kill_tumor() {
 				if(immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
 					immune[i+x][j+y] = Cell::Immune;
 				}
+			}
+			if(cells[i][j] == Cell::Tumor && oxygen[i][j] < ox_surv_thr) {
+				tumor_die(i, j);
 			}
 		}
 	}
@@ -231,22 +238,22 @@ void Sim::kill_immune() {
 void Sim::kill_healthy() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Healthy && toxin[i][j] >= toxin_thr) {
-				cell_die(i, j);
+			if(cells[i][j] == Cell::Healthy && (toxin[i][j] >= toxin_thr || oxygen[i][j] < ox_surv_thr)) {
+				healthy_die(i, j);
 			}
 		}
 	}
 }
 
 void Sim::hypoxia() {
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			if(oxygen[i][j] < ox_surv_thr) {
-				cell_die(i, j);
-				//immune_die(i, j);
-			}
-		}
-	}
+	//for(size_t i = 0; i < size; ++i) {
+		//for(size_t j = 0; j < size; ++j) {
+			//if(oxygen[i][j] < ox_surv_thr) {
+				//cell_die(i, j);
+				////immune_die(i, j);
+			//}
+		//}
+	//}
 }
 
 void Sim::proliferate() {
