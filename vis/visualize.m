@@ -33,6 +33,8 @@ f_tox = imagesc(toxin(:, :, 1), [0, 1]);
 axis('equal');
 title('Toxin');
 
+sgtitle('n = 0');
+
 waitforbuttonpress;
 
 for i = 1:size(cells, 3)
@@ -41,4 +43,5 @@ for i = 1:size(cells, 3)
     set(f_immune, 'CData', immune(:, :, i));
     set(f_ox, 'CData', oxygen(:, :, i));
     set(f_tox, 'CData', toxin(:, :, i));
+    sgtitle(['n = ', num2str(i)]);
 end
