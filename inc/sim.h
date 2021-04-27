@@ -40,7 +40,9 @@ class Sim {
 		void recruit_immune();
 		void count_cells();
 
-		int n_steps;
+		float sim_time;
+		float dt;
+		float log_step;
 
 	private:
 		static constexpr size_t size = 100;

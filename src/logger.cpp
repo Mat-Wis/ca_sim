@@ -28,6 +28,9 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.t_cycle), "t_cycle");
 	saveParam(&(sim.kill_limit), "kill_limit");
 	saveParam(&(sim.life_limit), "life_limit");
+	saveParam(&(sim.sim_time), "sim_time");
+	saveParam(&(sim.dt), "dt");
+	saveParam(&(sim.log_step), "log_step");
 }
 
 Logger::~Logger() {
@@ -55,12 +58,15 @@ void Logger::saveParam(float* var, const char* name) {
 	Mat_VarFree(param_var);
 }
 
-void Logger::log() {
+void Logger::log_num() {
+	Mat_VarWriteAppend(file, num_healthy_var, MAT_COMPRESSION_NONE, 2);
+	Mat_VarWriteAppend(file, num_tumor_var, MAT_COMPRESSION_NONE, 2);
+	Mat_VarWriteAppend(file, num_immune_var, MAT_COMPRESSION_NONE, 2);
+}
+
+void Logger::log_mat() {
 	Mat_VarWriteAppend(file, cells_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, immune_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, oxygen_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, toxin_var, MAT_COMPRESSION_NONE, 3);
-	Mat_VarWriteAppend(file, num_healthy_var, MAT_COMPRESSION_NONE, 2);
-	Mat_VarWriteAppend(file, num_tumor_var, MAT_COMPRESSION_NONE, 2);
-	Mat_VarWriteAppend(file, num_immune_var, MAT_COMPRESSION_NONE, 2);
 }

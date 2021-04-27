@@ -8,7 +8,8 @@ class Logger {
 		Logger(Sim& sim);
 		~Logger();
 
-		void log();
+		void log_num();
+		void log_mat();
 
 	private:
 		mat_t* file;

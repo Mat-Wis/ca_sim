@@ -32,10 +32,12 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
 	read_param<float>(parameters, "toxin_thr", toxin_thr);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
+	read_param<float>(parameters, "sim_time", sim_time);
+	read_param<float>(parameters, "dt", dt);
+	read_param<float>(parameters, "log_step", log_step);
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
 	read_param<int>(parameters, "life_limit", life_limit);
-	read_param<int>(parameters, "n_steps", n_steps);
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
@@ -82,6 +84,9 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 		var = T(setting.lookup(name));
 	} catch(const libconfig::SettingNotFoundException &snfex) {
 		std::cerr << "Setting '" << name << "' not found in configuration file." << std::endl;
+		throw;
+	} catch(const libconfig::SettingTypeException &stex) {
+		std::cerr << "Wrong type in setting '" << name << std::endl;
 		throw;
 	}
 }
