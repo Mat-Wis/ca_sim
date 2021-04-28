@@ -235,7 +235,7 @@ void Sim::move_immune() {
 		i = c.x;
 		j = c.y;
 
-		x = dist_1(gen);
+		x = dist_1(gen)+1;
 		y = dist_1(gen);
 
 		if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && immune[i+x][j+y] == Cell::Empty) {
@@ -266,21 +266,13 @@ inline void Sim::immune_die(size_t i, size_t j) {
 }
 
 void Sim::kill_tumor() {
-	std::uniform_int_distribution<int> dist_5(-5, 5);
 	std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
-	int x, y;
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
 				tumor_die(i, j);
 				++kill_cnt[i][j];
-
-				x = dist_5(gen);
-				y = dist_5(gen);
-				if(immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
-					immune[i+x][j+y] = Cell::Immune;
-				}
 			}
 			if(cells[i][j] == Cell::Tumor && oxygen[i][j] < ox_surv_thr) {
 				tumor_die(i, j);
@@ -364,12 +356,15 @@ void Sim::recruit_immune() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 	float num;
 
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			num = dist(gen);
-			if(num <= init_immune_ratio / life_limit && immune[i][j] == Cell::Empty) {
-				immune[i][j] = Cell::Immune;
-			}
+	for(size_t j = 0; j < size; ++j) {
+		num = dist(gen);
+		if(num <= init_immune_ratio / life_limit * size && immune[0][j] == Cell::Empty) {
+			immune[0][j] = Cell::Immune;
+		}
+
+		num = dist(gen);
+		if(num <= init_immune_ratio / life_limit * size && immune[size-1][j] == Cell::Empty) {
+			immune[size-1][j] = Cell::Immune;
 		}
 	}	
 }

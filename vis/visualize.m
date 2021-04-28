@@ -10,7 +10,7 @@ dims = [1, 1;
         2, 3;
         2, 3; ];
 
-figure('units', 'normalized', 'outerposition', [0 0 1 1]);
+f = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 colormap('hot');
 
 subplot(dims(n, 1), dims(n, 2), 1);
@@ -44,4 +44,14 @@ for i = 1:size(cells, 3)
     set(f_ox, 'CData', oxygen(:, :, i));
     set(f_ecm, 'CData', ecm_stress(:, :, i));
     sgtitle(['n = ', num2str(i)]);
+    
+%     frame = getframe(f);
+%     im = frame2im(frame); 
+%     [imind,cm] = rgb2ind(im,256); 
+%     % Write to the GIF File 
+%     if i == 1 
+%         imwrite(imind,cm, 'sepdiff_imm','gif', 'Loopcount',inf); 
+%     else 
+%         imwrite(imind,cm, 'sepdiff_imm','gif','WriteMode','append'); 
+%     end 
 end

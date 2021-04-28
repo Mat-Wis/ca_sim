@@ -13,8 +13,8 @@ int main()
 		sim.diffuse();
 
 		sim.damage_ecm();
-		//sim.move_immune();
-		//sim.recruit_immune();
+		sim.move_immune();
+		sim.recruit_immune();
 		sim.kill_tumor();
 		sim.kill_immune();
 		sim.kill_healthy();
