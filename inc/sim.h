@@ -30,20 +30,18 @@ class Sim {
 
 		void diffuse();
 		void oxygenate();
-		void secrete_toxin();
+		void damage_ecm();
 		void uptake_ox();
 		void move_immune();
 		void kill_tumor();
 		void kill_immune();
 		void kill_healthy();
-		void hypoxia();
 		void proliferate();
 		void recruit_immune();
 		void count_cells();
 
-		float sim_time;
-		float dt;
-		float log_step;
+		int n_steps;
+		int log_step;
 
 	private:
 		static constexpr size_t size = 100;
@@ -56,13 +54,15 @@ class Sim {
 		int kill_cnt[size][size];
 		int life_cnt[size][size];
 		float oxygen[size][size];
-		float toxin[size][size];
+		float ecm_stress[size][size];
 
 		Cell temp_cell[size][size];
 		int temp_int[size][size];
 		float temp_float[size][size];
 		
 		/* Parameters */
+		float sim_time;
+		float dt;
 		float diff_rate;
 		float ox_supply_level;
 		float ox_supply_rate;
@@ -80,9 +80,6 @@ class Sim {
 
 		/* Neighbourhood*/
 		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-		//static constexpr int nbr[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, 0}};
-		//static constexpr int nbr_even[][2] = {{-1, 0}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
-		//static constexpr int nbr_odd[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, 0}};
 		
 		/* Cell numbers */
 		int num_healthy;
@@ -96,8 +93,6 @@ class Sim {
 		/* Functions */
 		template<class T>
 		void read_param(const libconfig::Setting& setting, const char* name, T& var);
-
-		void diffuse_(float subst[size][size]);
 
 		void healthy_die(size_t i, size_t j);
 		void tumor_die(size_t i, size_t j);

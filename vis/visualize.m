@@ -29,9 +29,9 @@ axis('equal');
 title('Oxygen');
 
 subplot(dims(n, 1), dims(n, 2), 4);
-f_tox = imagesc(toxin(:, :, 1), [0, 1]);
+f_ecm = imagesc(ecm_stress(:, :, 1), [0, 1]);
 axis('equal');
-title('Toxin');
+title('ECM stress');
 
 sgtitle('n = 0');
 
@@ -42,6 +42,6 @@ for i = 1:size(cells, 3)
     set(f_cells, 'CData', cells(:, :, i));
     set(f_immune, 'CData', immune(:, :, i));
     set(f_ox, 'CData', oxygen(:, :, i));
-    set(f_tox, 'CData', toxin(:, :, i));
+    set(f_ecm, 'CData', ecm_stress(:, :, i));
     sgtitle(['n = ', num2str(i)]);
 end

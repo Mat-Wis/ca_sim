@@ -34,10 +34,12 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<float>(parameters, "sim_time", sim_time);
 	read_param<float>(parameters, "dt", dt);
-	read_param<float>(parameters, "log_step", log_step);
+	read_param<int>(parameters, "log_step", log_step);
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
 	read_param<int>(parameters, "life_limit", life_limit);
+
+	n_steps = static_cast<int>(sim_time / dt * 60.0f);
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
@@ -61,6 +63,11 @@ Sim::Sim(char* config_file) :
 			kill_cnt[i][j] = 0;
 			life_cnt[i][j] = 0;
 		}
+	}
+
+	for(size_t j = 0; j < size; ++j) {
+		oxygen[0][j] = 1.0;
+		oxygen[size-1][j] = 1.0;
 	}
 
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -92,61 +99,120 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 }
 
 void Sim::diffuse() {
-	diffuse_(oxygen);
-	diffuse_(toxin);
-}
-
-void Sim::diffuse_(float subst[size][size]) {
-	float d;
-
-	std::memcpy(temp_float, subst, size * size * sizeof(float));
-	for(size_t i = 1; i < size-1; ++i) {
-		for(size_t j = 1; j < size-1; ++j) {
-			d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
-			subst[i][j] += d * diff_rate;
-		}
-	}
-}
-
-void Sim::oxygenate() {
-	float d;
-
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			d = ox_supply_level - oxygen[i][j];
-			oxygen[i][j] += d * ox_supply_rate;
-		}
-	}
-}
-
-void Sim::secrete_toxin() {
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Tumor) {
-				toxin[i][j] += toxin_secrete_rate;
-			}
-		}
-	}
-}
-
-void Sim::uptake_ox() {
-	float new_val;
+	float d, c;
+	float diff_dt = 0.1;
+	float diff, max_diff;
 	
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			switch(cells[i][j]) {
-				case Cell::Healthy:
-					new_val = oxygen[i][j] - healthy_ox_rate;
-					break;
-				case Cell::Tumor:
-					new_val = oxygen[i][j] - tumor_ox_rate;
-					break;
-				default:
-					new_val = oxygen[i][j];
-					break;
+	for(int n = 0; n < 1000; ++n) {
+		max_diff = 0.0f;
+		std::memcpy(temp_float, oxygen, size * size * sizeof(float));
+		
+		for(size_t i = 1; i < size-1; ++i) {
+			/* diffuse top row (boundary conditions) */
+			d = temp_float[i-1][0] + temp_float[i+1][0] + temp_float[i][size-1] + temp_float[i][1] - 4 * temp_float[i][0];
+
+			if(cells[i][0] == Cell::Healthy) {
+				c = healthy_ox_rate;
+			} else if(cells[i][0] == Cell::Tumor) {
+				c = tumor_ox_rate;
+			} else {
+				c = 0.0f;
+			}
+
+			oxygen[i][0] += (d * diff_rate - c) * diff_dt;
+			if(oxygen[i][0] < 0) {
+				oxygen[i][0] = 0;
+			}
+
+			diff = std::abs(oxygen[i][0] - temp_float[i][0]);
+			if(diff > max_diff) {
+				max_diff = diff;
+			}
+
+			/* diffuse bottom row (boundary conditions) */
+			d = temp_float[i-1][size-1] + temp_float[i+1][size-1] + temp_float[i][size-2] + temp_float[i][0] - 4 * temp_float[i][size-1];
+
+			if(cells[i][size-1] == Cell::Healthy) {
+				c = healthy_ox_rate;
+			} else if(cells[i][size-1] == Cell::Tumor) {
+				c = tumor_ox_rate;
+			} else {
+				c = 0.0f;
+			}
+
+			oxygen[i][size-1] += (d * diff_rate - c) * diff_dt;
+			if(oxygen[i][size-1] < 0) {
+				oxygen[i][size-1] = 0;
+			}
+
+			diff = std::abs(oxygen[i][size-1] - temp_float[i][size-1]);
+			if(diff > max_diff) {
+				max_diff = diff;
 			}
 			
-			oxygen[i][j] = (new_val > 0.0f) ? new_val : 0.0f;
+			for(size_t j = 1; j < size-1; ++j) {
+				d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
+
+				if(cells[i][j] == Cell::Healthy) {
+					c = healthy_ox_rate;
+				} else if(cells[i][j] == Cell::Tumor) {
+					c = tumor_ox_rate;
+				} else {
+					c = 0.0f;
+				}
+
+				oxygen[i][j] += (d * diff_rate - c) * diff_dt;
+				if(oxygen[i][j] < 0) {
+					oxygen[i][j] = 0;
+				}
+
+				diff = std::abs(oxygen[i][j] - temp_float[i][j]);
+				if(diff > max_diff) {
+					max_diff = diff;
+				}
+			}
+		}
+		
+		if(max_diff < 0.00001) {
+			std::cout << "n = " << n << std::endl;
+			std::cout << "ns = " << oxygen[50][50] << std::endl;
+			break;
+		}
+	}
+}
+
+void Sim::damage_ecm() {
+	int x, y;
+	int n;
+	std::vector<int> i_vec;
+	std::vector<int> j_vec;
+	std::uniform_real_distribution<float> dist_f(0.0f, 0.1f);
+	
+	for(size_t i = 1; i < size-1; ++i) {
+		for(size_t j = 1; j < size-1; ++j) {
+			if(cells[i][j] == Cell::Tumor) {
+				i_vec.clear();
+				j_vec.clear();
+				
+				for(int n = 0; n < nbrhood; ++n) {
+					x = nbr[n][0];
+					y = nbr[n][1];
+					
+					if(0 <= i+x && i+x < size && 0 <= j+x && j+x < size && cells[i+x][j+y] == Cell::Healthy) {
+						i_vec.push_back(x);
+						j_vec.push_back(y);
+					}
+				}
+				
+				if(!i_vec.empty()) {
+					std::uniform_int_distribution<int> dist_n(0, i_vec.size()-1);
+					n = dist_n(gen);
+					x = i_vec[n];
+					y = j_vec[n];
+					
+					ecm_stress[i+x][j+y] += dist_f(gen);
+				}
+			}
 		}
 	}
 }
@@ -185,6 +251,7 @@ void Sim::move_immune() {
 
 inline void Sim::healthy_die(size_t i, size_t j) {
 	cells[i][j] = Cell::Empty;
+	ecm_stress[i][j] = 0.0f;
 }
 
 inline void Sim::tumor_die(size_t i, size_t j) {
@@ -238,22 +305,11 @@ void Sim::kill_immune() {
 void Sim::kill_healthy() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Healthy && (toxin[i][j] >= toxin_thr || oxygen[i][j] < ox_surv_thr)) {
+			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 3.0f || oxygen[i][j] < ox_surv_thr)) {
 				healthy_die(i, j);
 			}
 		}
 	}
-}
-
-void Sim::hypoxia() {
-	//for(size_t i = 0; i < size; ++i) {
-		//for(size_t j = 0; j < size; ++j) {
-			//if(oxygen[i][j] < ox_surv_thr) {
-				//cell_die(i, j);
-				////immune_die(i, j);
-			//}
-		//}
-	//}
 }
 
 void Sim::proliferate() {
@@ -283,19 +339,12 @@ void Sim::proliferate() {
 			j_vec.clear();
 			
 			for(int n = 0; n < nbrhood; ++n) {
-				//if(j % 2) {
-					//x = nbr_even[n][0];
-					//y = nbr_even[n][1];
-				//} else {
-					//x = nbr_odd[n][0];
-					//y = nbr_odd[n][1];
-				//}
 				x = nbr[n][0];
 				y = nbr[n][1];
 
 				if(0 <= i+x && i+x < size && 0 <= j+x && j+x < size && cells[i+x][j+y] == Cell::Empty) {
-					i_vec.push_back(i+x);
-					j_vec.push_back(j+y);
+					i_vec.push_back(x);
+					j_vec.push_back(y);
 				}
 			}
 
@@ -305,7 +354,7 @@ void Sim::proliferate() {
 				x = i_vec[n];
 				y = j_vec[n];
 
-				cells[x][y] = Cell::Tumor;
+				cells[i+x][j+y] = Cell::Tumor;
 			}
 		}
 	}
