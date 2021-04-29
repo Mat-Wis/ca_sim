@@ -174,8 +174,6 @@ void Sim::diffuse() {
 		}
 		
 		if(max_diff < 0.00001) {
-			std::cout << "n = " << n << std::endl;
-			std::cout << "ns = " << oxygen[50][50] << std::endl;
 			break;
 		}
 	}
@@ -267,12 +265,20 @@ inline void Sim::immune_die(size_t i, size_t j) {
 
 void Sim::kill_tumor() {
 	std::uniform_real_distribution<float> dist_f(0.0f, 1.0f);
+	std::uniform_int_distribution<int> dist_5(-5, 5);
+	int x, y;
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
 				tumor_die(i, j);
 				++kill_cnt[i][j];
+
+				x = dist_5(gen);
+				y = dist_5(gen);
+				if(i+x >= 0 && i+x < size && j+y >= 0 && j+y < size && immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
+					immune[i+x][j+y] = Cell::Immune;
+				}
 			}
 			if(cells[i][j] == Cell::Tumor && oxygen[i][j] < ox_surv_thr) {
 				tumor_die(i, j);
