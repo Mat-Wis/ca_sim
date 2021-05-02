@@ -10,9 +10,9 @@ int main()
 	Logger logger(sim);
 
 	for(int n = 0; n < sim.n_steps; ++n) {
+		sim.damage_ecm();
 		sim.diffuse();
 
-		sim.damage_ecm();
 		sim.move_immune();
 		sim.recruit_immune();
 		sim.kill_tumor();

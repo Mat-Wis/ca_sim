@@ -11,6 +11,7 @@ Logger::Logger(Sim& sim) {
 	cells_var = Mat_VarCreate("cells", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.cells), MAT_F_DONT_COPY_DATA);
 	immune_var = Mat_VarCreate("immune", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.immune), MAT_F_DONT_COPY_DATA);
 	oxygen_var = Mat_VarCreate("oxygen", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.oxygen), MAT_F_DONT_COPY_DATA);
+	attr_var = Mat_VarCreate("attr", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.attr), MAT_F_DONT_COPY_DATA);
 	ecm_var = Mat_VarCreate("ecm_stress", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.ecm_stress), MAT_F_DONT_COPY_DATA);
 	num_healthy_var = Mat_VarCreate("num_healthy", MAT_C_INT32, MAT_T_INT32, 2, dims_1, &(sim.num_healthy), MAT_F_DONT_COPY_DATA);
 	num_tumor_var = Mat_VarCreate("num_tumor", MAT_C_INT32, MAT_T_INT32, 2, dims_1, &(sim.num_tumor), MAT_F_DONT_COPY_DATA);
@@ -36,6 +37,7 @@ Logger::Logger(Sim& sim) {
 Logger::~Logger() {
 	Mat_VarFree(cells_var);
 	Mat_VarFree(oxygen_var);
+	Mat_VarFree(attr_var);
 	Mat_VarFree(ecm_var);
 	Mat_VarFree(num_healthy_var);
 	Mat_VarFree(num_tumor_var);
@@ -68,5 +70,6 @@ void Logger::log_mat() {
 	Mat_VarWriteAppend(file, cells_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, immune_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, oxygen_var, MAT_COMPRESSION_NONE, 3);
+	Mat_VarWriteAppend(file, attr_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, ecm_var, MAT_COMPRESSION_NONE, 3);
 }

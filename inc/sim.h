@@ -54,10 +54,9 @@ class Sim {
 		int kill_cnt[size][size];
 		int life_cnt[size][size];
 		float oxygen[size][size];
+		float attr[size][size];
 		float ecm_stress[size][size];
 
-		Cell temp_cell[size][size];
-		int temp_int[size][size];
 		float temp_float[size][size];
 		
 		/* Parameters */

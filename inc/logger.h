@@ -16,6 +16,7 @@ class Logger {
 		matvar_t* cells_var;
 		matvar_t* immune_var;
 		matvar_t* oxygen_var;
+		matvar_t* attr_var;
 		matvar_t* ecm_var;
 		matvar_t* num_healthy_var;
 		matvar_t* num_tumor_var;

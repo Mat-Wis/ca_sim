@@ -2,7 +2,7 @@ close all
 clear variables
 load('data.mat');
 
-n = 4;
+n = 5;
 dims = [1, 1;
         1, 2;
         1, 3;
@@ -29,6 +29,11 @@ axis('equal');
 title('Oxygen');
 
 subplot(dims(n, 1), dims(n, 2), 4);
+f_attr = imagesc(attr(:, :, 1), [0, 1]);
+axis('equal');
+title('Immune attractant');
+
+subplot(dims(n, 1), dims(n, 2), 5);
 f_ecm = imagesc(ecm_stress(:, :, 1), [0, 1]);
 axis('equal');
 title('ECM stress');
@@ -42,6 +47,7 @@ for i = 1:size(cells, 3)
     set(f_cells, 'CData', cells(:, :, i));
     set(f_immune, 'CData', immune(:, :, i));
     set(f_ox, 'CData', oxygen(:, :, i));
+    set(f_attr, 'CData', attr(:, :, i));
     set(f_ecm, 'CData', ecm_stress(:, :, i));
     sgtitle(['n = ', num2str(i)]);
     
