@@ -78,7 +78,7 @@ Sim::Sim(char* config_file) :
 		for(size_t j = 0; j < size; ++j) {
 			num = dist(gen);
 			if(num <= init_immune_ratio) {
-				immune[i][j] = Cell::Immune;
+				//immune[i][j] = Cell::Immune;
 			}
 		}
 	}
@@ -326,7 +326,7 @@ void Sim::kill_tumor() {
 				if(immune[i][j] == Cell::Immune) {
 					tumor_apoptosis(i, j);
 					++kill_cnt[i][j];
-					attr[i][j] += 0.1;
+					attr[i][j] += 0.5;
 				} else if(oxygen[i][j] < ox_surv_thr) {
 					tumor_necrosis(i, j);
 				}
@@ -351,7 +351,7 @@ void Sim::kill_immune() {
 void Sim::kill_healthy() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 3.0f || oxygen[i][j] < ox_surv_thr)) {
+			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 5.0f || oxygen[i][j] < ox_surv_thr)) {
 				healthy_die(i, j);
 			}
 		}
@@ -412,12 +412,12 @@ void Sim::recruit_immune() {
 
 	for(size_t j = 0; j < size; ++j) {
 		num = dist(gen);
-		if(num <= init_immune_ratio / life_limit * size && immune[0][j] == Cell::Empty) {
+		if(num <= (init_immune_ratio / life_limit * size) && immune[0][j] == Cell::Empty) {
 			immune[1][j] = Cell::Immune;
 		}
 
 		num = dist(gen);
-		if(num <= init_immune_ratio / life_limit * size && immune[size-1][j] == Cell::Empty) {
+		if(num <= (init_immune_ratio / life_limit * size) && immune[size-1][j] == Cell::Empty) {
 			immune[size-2][j] = Cell::Immune;
 		}
 	}	

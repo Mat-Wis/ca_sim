@@ -55,7 +55,7 @@ for i = 1:size(cells, 3)
 %     im = frame2im(frame); 
 %     [imind,cm] = rgb2ind(im,256); 
 %     % Write to the GIF File 
-%     if i == 1 
+%     if i == 1
 %         imwrite(imind,cm, 'sepdiff_imm','gif', 'Loopcount',inf); 
 %     else 
 %         imwrite(imind,cm, 'sepdiff_imm','gif','WriteMode','append'); 
