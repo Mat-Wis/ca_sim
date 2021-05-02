@@ -252,7 +252,12 @@ inline void Sim::healthy_die(size_t i, size_t j) {
 	ecm_stress[i][j] = 0.0f;
 }
 
-inline void Sim::tumor_die(size_t i, size_t j) {
+inline void Sim::tumor_apoptosis(size_t i, size_t j) {
+	cells[i][j] = Cell::Empty;
+	prolif_cnt[i][j] = 0;
+}
+
+inline void Sim::tumor_necrosis(size_t i, size_t j) {
 	cells[i][j] = Cell::DeadTumor;
 	prolif_cnt[i][j] = 0;
 }
@@ -270,18 +275,20 @@ void Sim::kill_tumor() {
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(immune[i][j] == Cell::Immune && cells[i][j] == Cell::Tumor) {
-				tumor_die(i, j);
-				++kill_cnt[i][j];
+			if(cells[i][j] == Cell::Tumor) {
+				if(immune[i][j] == Cell::Immune) {
+					tumor_apoptosis(i, j);
+					++kill_cnt[i][j];
 
-				x = dist_5(gen);
-				y = dist_5(gen);
-				if(i+x >= 0 && i+x < size && j+y >= 0 && j+y < size && immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
-					immune[i+x][j+y] = Cell::Immune;
+					x = dist_5(gen);
+					y = dist_5(gen);
+					if(i+x >= 0 && i+x < size && j+y >= 0 && j+y < size && immune[i+x][j+y] == Cell::Empty && dist_f(gen) < 0.2) {
+						immune[i+x][j+y] = Cell::Immune;
+					}
 				}
-			}
-			if(cells[i][j] == Cell::Tumor && oxygen[i][j] < ox_surv_thr) {
-				tumor_die(i, j);
+				if(oxygen[i][j] < ox_surv_thr) {
+					tumor_necrosis(i, j);
+				}
 			}
 		}
 	}

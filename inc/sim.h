@@ -95,7 +95,8 @@ class Sim {
 		void read_param(const libconfig::Setting& setting, const char* name, T& var);
 
 		void healthy_die(size_t i, size_t j);
-		void tumor_die(size_t i, size_t j);
+		void tumor_apoptosis(size_t i, size_t j);
+		void tumor_necrosis(size_t i, size_t j);
 		void immune_die(size_t i, size_t j);
 
 		friend class Logger;
