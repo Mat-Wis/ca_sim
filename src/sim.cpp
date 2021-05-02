@@ -284,8 +284,8 @@ void Sim::move_immune() {
 			//++n;
 		//}
 
-		x = nbr[idx.back()][0];
-		y = nbr[idx.back()][1];
+		x = nbr[idx.back()][0] + dist_1(gen);
+		y = nbr[idx.back()][1] + dist_1(gen);
 		
 		if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && immune[i+x][j+y] == Cell::Empty) {
 			immune[i][j] = Cell::Empty;
