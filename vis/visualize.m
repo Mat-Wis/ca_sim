@@ -38,7 +38,7 @@ f_ecm = imagesc(ecm_stress(:, :, 1), [0, 1]);
 axis('equal');
 title('ECM stress');
 
-sgtitle('n = 0');
+sgtitle(print_time(0));
 
 waitforbuttonpress;
 
@@ -49,7 +49,11 @@ for i = 1:size(cells, 3)
     set(f_ox, 'CData', oxygen(:, :, i));
     set(f_attr, 'CData', attr(:, :, i));
     set(f_ecm, 'CData', ecm_stress(:, :, i));
-    sgtitle(['n = ', num2str(i)]);
+    
+    d = floor(i / 24 / 3);
+    h = floor((i - d * 24 * 3) / 3);
+    m = (i - d * 24 * 3 - h * 3) * 20;
+    sgtitle(print_time(i));
     
 %     frame = getframe(f);
 %     im = frame2im(frame); 
@@ -60,4 +64,12 @@ for i = 1:size(cells, 3)
 %     else 
 %         imwrite(imind,cm, 'sepdiff_imm','gif','WriteMode','append'); 
 %     end 
+end
+
+function str = print_time(i)
+    d = floor(i / 24 / 3);
+    h = floor((i - d * 24 * 3) / 3);
+    m = (i - d * 24 * 3 - h * 3) * 20;
+    
+    str = [num2str(d, '%02d'), ' days ', num2str(h, '%02d'), ' hours ', num2str(m, '%02d'), ' minutes'];
 end
