@@ -21,12 +21,9 @@ Sim::Sim(char* config_file) :
 	const libconfig::Setting& parameters = root["parameters"];
 
 	read_param<std::string>(root, "logfile", logfile);
-	read_param<float>(parameters, "diff_rate", diff_rate);
-	read_param<float>(parameters, "ox_supply_level", ox_supply_level);
-	read_param<float>(parameters, "ox_supply_rate", ox_supply_rate);
-	read_param<float>(parameters, "healthy_ox_rate", healthy_ox_rate);
-	read_param<float>(parameters, "immune_ox_rate", immune_ox_rate);
-	read_param<float>(parameters, "tumor_ox_rate", tumor_ox_rate);
+	read_param<float>(parameters, "alpha2", alpha2);
+	read_param<float>(parameters, "lambda", lambda);
+	read_param<float>(parameters, "beta2", beta2);
 	read_param<float>(parameters, "ox_surv_thr", ox_surv_thr);
 	read_param<float>(parameters, "ox_prolif_thr", ox_prolif_thr);
 	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
@@ -58,7 +55,7 @@ Sim::Sim(char* config_file) :
 
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			oxygen[i][j] = 0.9;
+			nutrient[i][j] = 0.9;
 			prolif_cnt[i][j] = 0;
 			kill_cnt[i][j] = 0;
 			life_cnt[i][j] = 0;
@@ -67,8 +64,8 @@ Sim::Sim(char* config_file) :
 	}
 
 	for(size_t j = 0; j < size; ++j) {
-		oxygen[0][j] = 1.0;
-		oxygen[size-1][j] = 1.0;
+		nutrient[0][j] = 1.0;
+		nutrient[size-1][j] = 1.0;
 	}
 
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
@@ -99,108 +96,81 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 	}
 }
 
-void Sim::diffuse() {
-	float d, c;
-	float diff_dt = 0.1;
-	float diff, max_diff;
+inline void Sim::diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff) {
+	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
+					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
+						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
+				temp_float[i][j];
+
+	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p];
+
+	nutrient[i][j] = (d - c) / 4.0f;
+
+	if(nutrient[i][j] < 0.0f) {
+		nutrient[i][j] = 0.0f;
+	}
+
+	float diff = std::abs(nutrient[i][j] - temp_float[i][j]);
+	if(diff > max_diff) {
+		max_diff = diff;
+	}
+}
+
+inline void Sim::diffuse_attr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff) {
+	float c = beta2 * static_cast<float>(cells[i][j] == Cell::Tumor || cells[i][j] == Cell::DeadTumor);
+	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p];
 	
+	attr[i][j] = (d + c) / 4.0f;
+	
+	if(attr[i][j] < 0) {
+		attr[i][j] = 0;
+	}
+	
+	float diff = std::abs(attr[i][j] - temp_float[i][j]);
+	if(diff > max_diff) {
+		max_diff = diff;
+	}
+}
+
+void Sim::diffuse() {
+	float max_diff;
+	
+	/* Diffuse nutrient */
 	for(int n = 0; n < 1000; ++n) {
+		std::memcpy(temp_float, nutrient, size * size * sizeof(float));
 		max_diff = 0.0f;
-		std::memcpy(temp_float, oxygen, size * size * sizeof(float));
 		
 		for(size_t i = 1; i < size-1; ++i) {
 			/* diffuse top row (boundary conditions) */
-			d = temp_float[i-1][0] + temp_float[i+1][0] + temp_float[i][size-1] + temp_float[i][1] - 4 * temp_float[i][0];
-
-			if(cells[i][0] == Cell::Healthy) {
-				c = healthy_ox_rate;
-			} else if(cells[i][0] == Cell::Tumor) {
-				c = tumor_ox_rate;
-			} else {
-				c = 0.0f;
-			}
-
-			oxygen[i][0] += (d * diff_rate - c) * diff_dt;
-			if(oxygen[i][0] < 0) {
-				oxygen[i][0] = 0;
-			}
-
-			diff = std::abs(oxygen[i][0] - temp_float[i][0]);
-			if(diff > max_diff) {
-				max_diff = diff;
-			}
+			diffuse_nutr(i, 0, size-1, 1, max_diff);
 
 			/* diffuse bottom row (boundary conditions) */
-			d = temp_float[i-1][size-1] + temp_float[i+1][size-1] + temp_float[i][size-2] + temp_float[i][0] - 4 * temp_float[i][size-1];
-
-			if(cells[i][size-1] == Cell::Healthy) {
-				c = healthy_ox_rate;
-			} else if(cells[i][size-1] == Cell::Tumor) {
-				c = tumor_ox_rate;
-			} else {
-				c = 0.0f;
-			}
-
-			oxygen[i][size-1] += (d * diff_rate - c) * diff_dt;
-			if(oxygen[i][size-1] < 0) {
-				oxygen[i][size-1] = 0;
-			}
-
-			diff = std::abs(oxygen[i][size-1] - temp_float[i][size-1]);
-			if(diff > max_diff) {
-				max_diff = diff;
-			}
+			diffuse_nutr(i, size-1, size-2, 0, max_diff);
 			
 			for(size_t j = 1; j < size-1; ++j) {
-				d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
-
-				if(cells[i][j] == Cell::Healthy) {
-					c = healthy_ox_rate;
-				} else if(cells[i][j] == Cell::Tumor) {
-					c = tumor_ox_rate;
-				} else {
-					c = 0.0f;
-				}
-
-				oxygen[i][j] += (d * diff_rate - c) * diff_dt;
-				if(oxygen[i][j] < 0) {
-					oxygen[i][j] = 0;
-				}
-
-				diff = std::abs(oxygen[i][j] - temp_float[i][j]);
-				if(diff > max_diff) {
-					max_diff = diff;
-				}
+				diffuse_nutr(i, j, j-1, j+1, max_diff);
 			}
 		}
-		
+
 		if(max_diff < 0.00001) {
 			break;
 		}
 	}
 	
+	/* Diffuse attractant */
 	for(int n = 0; n < 1000; ++n) {
-		max_diff = 0.0f;
 		std::memcpy(temp_float, attr, size * size * sizeof(float));
-
+		max_diff = 0.0f;
+		
 		for(size_t i = 1; i < size-1; ++i) {
+			/* diffuse top row (boundary conditions) */
+			diffuse_attr(i, 0, size-1, 1, max_diff);
+
+			/* diffuse bottom row (boundary conditions) */
+			diffuse_attr(i, size-1, size-2, 0, max_diff);
+			
 			for(size_t j = 1; j < size-1; ++j) {
-				d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
-				
-				c = 0.0f;
-				if(cells[i][j] == Cell::Tumor) {
-					c = 0.001;
-				}
-				attr[i][j] += (d * diff_rate + c) * diff_dt;
-
-				if(attr[i][j] < 0) {
-					attr[i][j] = 0;
-				}
-
-				diff = std::abs(attr[i][j] - temp_float[i][j]);
-				if(diff > max_diff) {
-					max_diff = diff;
-				}
+				diffuse_attr(i, j, j-1, j+1, max_diff);
 			}
 		}
 
@@ -253,7 +223,6 @@ void Sim::move_immune() {
 	std::vector<float> attr_vec(nbrhood);
 	std::vector<float> attr_sum(nbrhood);
 	std::vector<size_t> idx(nbrhood);
-	float val;
 	
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
@@ -274,15 +243,6 @@ void Sim::move_immune() {
 		n = 0;
 		std::generate(idx.begin(), idx.end(), [&n]{ return n++; });
 		std::stable_sort(idx.begin(), idx.end(), [&attr_vec](size_t i1, size_t i2) {return attr_vec[i1] < attr_vec[i2]; } );
-		//std::stable_sort(attr_vec.begin(), attr_vec.end());
-		//std::partial_sum(attr_vec.begin(), attr_vec.end(), attr_sum.begin());
-		
-		//std::uniform_real_distribution<float> dist(0.0f, attr_sum.back());
-		//val = dist(gen);
-		//n = 0;
-		//while(val > attr_sum[n]) {
-			//++n;
-		//}
 
 		x = nbr[idx.back()][0] + dist_1(gen);
 		y = nbr[idx.back()][1] + dist_1(gen);
@@ -327,7 +287,7 @@ void Sim::kill_tumor() {
 					tumor_apoptosis(i, j);
 					++kill_cnt[i][j];
 					attr[i][j] += 0.5;
-				} else if(oxygen[i][j] < ox_surv_thr) {
+				} else if(nutrient[i][j] < ox_surv_thr) {
 					tumor_necrosis(i, j);
 				}
 			}
@@ -351,7 +311,7 @@ void Sim::kill_immune() {
 void Sim::kill_healthy() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 5.0f || oxygen[i][j] < ox_surv_thr)) {
+			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 5.0f || nutrient[i][j] < ox_surv_thr)) {
 				healthy_die(i, j);
 			}
 		}
@@ -368,7 +328,7 @@ void Sim::proliferate() {
 
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
-			if(cells[i][j] == Cell::Tumor && oxygen[i][j] > ox_prolif_thr) {
+			if(cells[i][j] == Cell::Tumor && nutrient[i][j] > ox_prolif_thr) {
 				tumor_cells.push_back({i, j});
 			}
 		}

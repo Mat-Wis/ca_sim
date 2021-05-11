@@ -27,9 +27,9 @@ int main()
 			logger.log_mat();
 		}
 
-		if(n % 1000 == 0) {
+		//if(n % 1000 == 0) {
 			std::cout << "n = " << n << std::endl;
-		}
+		//}
 	}
 
 	return 0;

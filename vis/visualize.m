@@ -24,9 +24,9 @@ axis('equal');
 title('Immune cells');
 
 subplot(dims(n, 1), dims(n, 2), 3);
-f_ox = imagesc(oxygen(:, :, 1), [0, 1]);
+f_ox = imagesc(nutrient(:, :, 1), [0, 1]);
 axis('equal');
-title('Oxygen');
+title('Nutrient');
 
 subplot(dims(n, 1), dims(n, 2), 4);
 f_attr = imagesc(attr(:, :, 1), [0, 1]);
@@ -46,7 +46,7 @@ for i = 1:size(cells, 3)
     pause(0.001);
     set(f_cells, 'CData', cells(:, :, i));
     set(f_immune, 'CData', immune(:, :, i));
-    set(f_ox, 'CData', oxygen(:, :, i));
+    set(f_ox, 'CData', nutrient(:, :, i));
     set(f_attr, 'CData', attr(:, :, i));
     set(f_ecm, 'CData', ecm_stress(:, :, i));
     

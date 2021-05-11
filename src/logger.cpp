@@ -10,33 +10,34 @@ Logger::Logger(Sim& sim) {
 
 	cells_var = Mat_VarCreate("cells", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.cells), MAT_F_DONT_COPY_DATA);
 	immune_var = Mat_VarCreate("immune", MAT_C_INT32, MAT_T_INT32, 3, dims, &(sim.immune), MAT_F_DONT_COPY_DATA);
-	oxygen_var = Mat_VarCreate("oxygen", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.oxygen), MAT_F_DONT_COPY_DATA);
+	nutrient_var = Mat_VarCreate("nutrient", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.nutrient), MAT_F_DONT_COPY_DATA);
 	attr_var = Mat_VarCreate("attr", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.attr), MAT_F_DONT_COPY_DATA);
 	ecm_var = Mat_VarCreate("ecm_stress", MAT_C_SINGLE, MAT_T_SINGLE, 3, dims, &(sim.ecm_stress), MAT_F_DONT_COPY_DATA);
 	num_healthy_var = Mat_VarCreate("num_healthy", MAT_C_INT32, MAT_T_INT32, 2, dims_1, &(sim.num_healthy), MAT_F_DONT_COPY_DATA);
 	num_tumor_var = Mat_VarCreate("num_tumor", MAT_C_INT32, MAT_T_INT32, 2, dims_1, &(sim.num_tumor), MAT_F_DONT_COPY_DATA);
 	num_immune_var = Mat_VarCreate("num_immune", MAT_C_INT32, MAT_T_INT32, 2, dims_1, &(sim.num_immune), MAT_F_DONT_COPY_DATA);
 
-	saveParam(&(sim.diff_rate), "diff_rate");
-	saveParam(&(sim.ox_supply_level), "ox_supply_level");
-	saveParam(&(sim.ox_supply_rate), "ox_supply_rate");
-	saveParam(&(sim.healthy_ox_rate), "healthy_ox_rate");
-	saveParam(&(sim.immune_ox_rate), "immune_ox_rate");
-	saveParam(&(sim.tumor_ox_rate), "tumor_ox_rate");
-	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
-	saveParam(&(sim.toxin_thr), "toxin_thr");
-	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
-	saveParam(&(sim.t_cycle), "t_cycle");
-	saveParam(&(sim.kill_limit), "kill_limit");
-	saveParam(&(sim.life_limit), "life_limit");
 	saveParam(&(sim.sim_time), "sim_time");
 	saveParam(&(sim.dt), "dt");
 	saveParam(&(sim.log_step), "log_step");
+
+	saveParam(&(sim.alpha2), "alpha2");
+	saveParam(&(sim.lambda), "lambda");
+	saveParam(&(sim.beta2), "beta2");
+	saveParam(&(sim.ox_surv_thr), "ox_surv_thr");
+	saveParam(&(sim.ox_prolif_thr), "ox_prolif_thr");
+
+	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
+	saveParam(&(sim.toxin_thr), "toxin_thr");
+	saveParam(&(sim.t_cycle), "t_cycle");
+	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
+	saveParam(&(sim.kill_limit), "kill_limit");
+	saveParam(&(sim.life_limit), "life_limit");
 }
 
 Logger::~Logger() {
 	Mat_VarFree(cells_var);
-	Mat_VarFree(oxygen_var);
+	Mat_VarFree(nutrient_var);
 	Mat_VarFree(attr_var);
 	Mat_VarFree(ecm_var);
 	Mat_VarFree(num_healthy_var);
@@ -69,7 +70,7 @@ void Logger::log_num() {
 void Logger::log_mat() {
 	Mat_VarWriteAppend(file, cells_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, immune_var, MAT_COMPRESSION_NONE, 3);
-	Mat_VarWriteAppend(file, oxygen_var, MAT_COMPRESSION_NONE, 3);
+	Mat_VarWriteAppend(file, nutrient_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, attr_var, MAT_COMPRESSION_NONE, 3);
 	Mat_VarWriteAppend(file, ecm_var, MAT_COMPRESSION_NONE, 3);
 }

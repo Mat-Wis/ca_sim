@@ -29,9 +29,7 @@ class Sim {
 		~Sim();
 
 		void diffuse();
-		void oxygenate();
 		void damage_ecm();
-		void uptake_ox();
 		void move_immune();
 		void kill_tumor();
 		void kill_immune();
@@ -53,7 +51,7 @@ class Sim {
 		int prolif_cnt[size][size];
 		int kill_cnt[size][size];
 		int life_cnt[size][size];
-		float oxygen[size][size];
+		float nutrient[size][size];
 		float attr[size][size];
 		float ecm_stress[size][size];
 
@@ -62,12 +60,9 @@ class Sim {
 		/* Parameters */
 		float sim_time;
 		float dt;
-		float diff_rate;
-		float ox_supply_level;
-		float ox_supply_rate;
-		float healthy_ox_rate;
-		float immune_ox_rate;
-		float tumor_ox_rate;
+		float alpha2;
+		float lambda;
+		float beta2;
 		float ox_surv_thr;
 		float ox_prolif_thr;
 		float toxin_secrete_rate;
@@ -97,6 +92,8 @@ class Sim {
 		void tumor_apoptosis(size_t i, size_t j);
 		void tumor_necrosis(size_t i, size_t j);
 		void immune_die(size_t i, size_t j);
+		void diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff);
+		void diffuse_attr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff);
 
 		friend class Logger;
 		std::string logfile;
