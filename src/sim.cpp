@@ -97,14 +97,15 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 }
 
 inline void Sim::diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff) {
+	const float diff_dt = 0.01;
 	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
 						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
 				temp_float[i][j];
 
-	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p];
+	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p] - 4 * temp_float[i][j];
 
-	nutrient[i][j] = (d - c) / 4.0f;
+	nutrient[i][j] += (d - c) * diff_dt;
 
 	if(nutrient[i][j] < 0.0f) {
 		nutrient[i][j] = 0.0f;
