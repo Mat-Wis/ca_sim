@@ -12,38 +12,45 @@ dims = [1, 1;
 
 f = figure('units', 'normalized', 'outerposition', [0 0 1 1]);
 colormap('hot');
+sz = size(cells, 1);
 
 subplot(dims(n, 1), dims(n, 2), 1);
 f_cells = imagesc(cells(:, : ,1), [0, 30]);
 axis('equal');
 title('Cells');
+xlim([0, sz]);
 
 subplot(dims(n, 1), dims(n, 2), 2);
 f_immune = imagesc(immune(:, : ,1), [0, 30]);
 axis('equal');
 title('Immune cells');
+xlim([0, sz]);
 
 subplot(dims(n, 1), dims(n, 2), 3);
 f_ox = imagesc(nutrient(:, :, 1), [0, 1]);
 axis('equal');
 title('Nutrient');
+xlim([0, sz]);
 
 subplot(dims(n, 1), dims(n, 2), 4);
 f_attr = imagesc(attr(:, :, 1), [0, 1]);
 axis('equal');
 title('Immune attractant');
+xlim([0, sz]);
 
 subplot(dims(n, 1), dims(n, 2), 5);
 f_ecm = imagesc(ecm_stress(:, :, 1), [0, 1]);
 axis('equal');
 title('ECM stress');
+xlim([0, sz]);
 
 sgtitle(print_time(0));
 
 waitforbuttonpress;
 
 for i = 1:size(cells, 3)
-    pause(0.001);
+%     pause(0.001);
+    drawnow;
     set(f_cells, 'CData', cells(:, :, i));
     set(f_immune, 'CData', immune(:, :, i));
     set(f_ox, 'CData', nutrient(:, :, i));

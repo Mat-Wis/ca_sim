@@ -15,7 +15,8 @@ enum class Cell : int {
 	Healthy		= 10, 
 	Tumor		= 20,
 	DeadTumor	= 30,
-	Immune		= 40
+	Immune		= 40,
+	Vessel		= 50
 };
 
 struct Coord {
@@ -92,8 +93,9 @@ class Sim {
 		void tumor_apoptosis(size_t i, size_t j);
 		void tumor_necrosis(size_t i, size_t j);
 		void immune_die(size_t i, size_t j);
-		void diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff);
-		void diffuse_attr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff);
+		void diffuse_nutr(size_t i, size_t j, float& max_diff);
+		void diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t j_m, size_t j_p, float& max_diff);
+		void diffuse_attr(size_t i, size_t j, float& max_diff);
 
 		friend class Logger;
 		std::string logfile;

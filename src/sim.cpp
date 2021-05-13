@@ -6,6 +6,7 @@ Sim::Sim(char* config_file) :
 {
 	libconfig::Config cfg;
 
+	/* read configuration file */
 	try {
 		cfg.readFile(config_file);
 	} catch(const libconfig::FileIOException &fioex) {
@@ -20,6 +21,7 @@ Sim::Sim(char* config_file) :
 	const libconfig::Setting& root = cfg.getRoot();
 	const libconfig::Setting& parameters = root["parameters"];
 
+	/* read all parameters */
 	read_param<std::string>(root, "logfile", logfile);
 	read_param<float>(parameters, "alpha2", alpha2);
 	read_param<float>(parameters, "lambda", lambda);
@@ -38,44 +40,44 @@ Sim::Sim(char* config_file) :
 
 	n_steps = static_cast<int>(sim_time / dt * 60.0f);
 
-	for(size_t i = 0; i < size; ++i) {
+	/* fill simulation area with healthy cells */
+	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			cells[i][j] = Cell::Healthy;
-			//cells[i][j] = Cell::Empty;
 		}
 	}
 
+	/* add blood vessels */
+	for(size_t j = 0; j < size; ++j) {
+		cells[0][j] = Cell::Vessel;
+		cells[size-1][j] = Cell::Vessel;
+	}
+
+	/* add tumor cells in the center */
 	for(size_t i = size/2-10; i <= size/2+10; ++i) {
 		for(size_t j = size/2-10; j <= size/2+10; ++j) {
-			if((i-size/2)*(i-size/2) + (j-size/2)*(j-size/2) <= 100) {
+			if((i-size/2)*(i-size/2) + (j-size/2)*(j-size/2) <= 25) {
 				cells[i][j] = Cell::Tumor;
 			}
 		}
 	}
 
+	/* initialize all other layers */
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			nutrient[i][j] = 0.9;
-			prolif_cnt[i][j] = 0;
-			kill_cnt[i][j] = 0;
-			life_cnt[i][j] = 0;
-			attr[i][j] = 0;
+			prolif_cnt[i][j] = 0.0;
+			kill_cnt[i][j] = 0.0;
+			life_cnt[i][j] = 0.0;
+			attr[i][j] = 0.0;
 		}
 	}
 
-	for(size_t j = 0; j < size; ++j) {
-		nutrient[0][j] = 1.0;
-		nutrient[size-1][j] = 1.0;
-	}
-
-	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-	float num;
-
+	/* nutrient concentration in blood vessels */
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			num = dist(gen);
-			if(num <= init_immune_ratio) {
-				//immune[i][j] = Cell::Immune;
+			if(cells[i][j] == Cell::Vessel) {
+				nutrient[i][j] = 1.0f;
 			}
 		}
 	}
@@ -96,14 +98,18 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 	}
 }
 
-inline void Sim::diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff) {
+inline void Sim::diffuse_nutr(size_t i, size_t j, float& max_diff) {
+	if(cells[i][j] == Cell::Vessel) {
+		return;
+	}
+
 	const float diff_dt = 0.01;
 	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
 						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
 				temp_float[i][j];
 
-	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p] - 4 * temp_float[i][j];
+	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
 
 	nutrient[i][j] += (d - c) * diff_dt;
 
@@ -117,9 +123,34 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, size_t j_m, size_t j_p, float&
 	}
 }
 
-inline void Sim::diffuse_attr(size_t i, size_t j, size_t j_m, size_t j_p, float& max_diff) {
+inline void Sim::diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t j_m, size_t j_p, float& max_diff) {
+	if(cells[i][j] == Cell::Vessel) {
+		return;
+	}
+
+	const float diff_dt = 0.01;
+	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
+					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
+						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
+				temp_float[i][j];
+
+	float d = temp_float[i_m][j] + temp_float[i_p][j] + temp_float[i][j_m] + temp_float[i][j_p] - 4 * temp_float[i][j];
+
+	nutrient[i][j] += (d - c) * diff_dt;
+
+	if(nutrient[i][j] < 0.0f) {
+		nutrient[i][j] = 0.0f;
+	}
+
+	float diff = std::abs(nutrient[i][j] - temp_float[i][j]);
+	if(diff > max_diff) {
+		max_diff = diff;
+	}
+}
+
+inline void Sim::diffuse_attr(size_t i, size_t j, float& max_diff) {
 	float c = beta2 * static_cast<float>(cells[i][j] == Cell::Tumor || cells[i][j] == Cell::DeadTumor);
-	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j_m] + temp_float[i][j_p];
+	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1];
 	
 	attr[i][j] = (d + c) / 4.0f;
 	
@@ -141,15 +172,25 @@ void Sim::diffuse() {
 		std::memcpy(temp_float, nutrient, size * size * sizeof(float));
 		max_diff = 0.0f;
 		
+		/* diffuse left column (boundary conditions) */
+		for(size_t j = 0; j < size; ++j) {
+			diffuse_nutr(0, j, size-1, 1, j-1, j+1, max_diff);
+		}
+
+		/* diffuse right column (boundary conditions) */
+		for(size_t j = 0; j < size; ++j) {
+			diffuse_nutr(size-1, j, size-2, 0, j-1, j+1, max_diff);
+		}
+
 		for(size_t i = 1; i < size-1; ++i) {
 			/* diffuse top row (boundary conditions) */
-			diffuse_nutr(i, 0, size-1, 1, max_diff);
+			diffuse_nutr(i, 0, i-1, i+1, size-1, 1, max_diff);
 
 			/* diffuse bottom row (boundary conditions) */
-			diffuse_nutr(i, size-1, size-2, 0, max_diff);
+			diffuse_nutr(i, size-1, i-1, i+1, size-2, 0, max_diff);
 			
 			for(size_t j = 1; j < size-1; ++j) {
-				diffuse_nutr(i, j, j-1, j+1, max_diff);
+				diffuse_nutr(i, j, max_diff);
 			}
 		}
 
@@ -165,7 +206,7 @@ void Sim::diffuse() {
 		
 		for(size_t i = 1; i < size-1; ++i) {
 			for(size_t j = 1; j < size-1; ++j) {
-				diffuse_attr(i, j, j-1, j+1, max_diff);
+				diffuse_attr(i, j, max_diff);
 			}
 		}
 
@@ -212,12 +253,11 @@ void Sim::damage_ecm() {
 }
 
 void Sim::move_immune() {
-	int x, y, n;
-	size_t i, j;
+	size_t i, j, it, nx, ny, x, y;
 	std::vector<Coord> immune_cells;
-	std::vector<float> attr_vec(nbrhood);
-	std::vector<float> attr_sum(nbrhood);
-	std::vector<size_t> idx(nbrhood);
+	std::vector<Coord> nbrs;
+	std::vector<float> attr_vec;
+	std::vector<size_t> idx;
 	
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
@@ -232,22 +272,33 @@ void Sim::move_immune() {
 		i = c.x;
 		j = c.y;
 
-		for(n = 0; n < nbrhood; ++n) {
-			attr_vec[n] = attr[ i+nbr[n][0] ][ j+nbr[n][1] ];
+		nbrs.clear();
+		attr_vec.clear();
+		idx.clear();
+
+		for(int n = 0; n < nbrhood; ++n) {
+			nx = static_cast<size_t>(i+nbr[n][0]);
+			ny = static_cast<size_t>(j+nbr[n][1]);
+			if(nx < size && ny < size) {
+				attr_vec.push_back(attr[nx][ny]);
+				nbrs.push_back({nx, ny});
+			}
 		}
-		n = 0;
-		std::generate(idx.begin(), idx.end(), [&n]{ return n++; });
+		
+		idx.resize(nbrs.size());
+		it = 0;
+		std::generate(idx.begin(), idx.end(), [&it]{ return it++; });
 		std::stable_sort(idx.begin(), idx.end(), [&attr_vec](size_t i1, size_t i2) {return attr_vec[i1] < attr_vec[i2]; } );
 
-		x = nbr[idx.back()][0] + dist_1(gen);
-		y = nbr[idx.back()][1] + dist_1(gen);
+		x = static_cast<size_t>(nbrs[idx.back()].x + dist_1(gen));
+		y = static_cast<size_t>(nbrs[idx.back()].y + dist_1(gen));
 		
-		if(i+x < size && i+x >= 0 && j+x < size && j+x >= 0 && immune[i+x][j+y] == Cell::Empty) {
+		if(x < size && y < size && immune[x][y] == Cell::Empty) {
 			immune[i][j] = Cell::Empty;
-			immune[i+x][j+y] = Cell::Immune;
-			kill_cnt[i+x][j+y] = kill_cnt[i][j];
+			immune[x][y] = Cell::Immune;
+			kill_cnt[x][y] = kill_cnt[i][j];
 			kill_cnt[i][j] = 0;
-			life_cnt[i+x][j+y] = life_cnt[i][j];
+			life_cnt[x][y] = life_cnt[i][j];
 			life_cnt[i][j] = 0;
 		}
 	}
@@ -363,19 +414,41 @@ void Sim::proliferate() {
 
 void Sim::recruit_immune() {
 	std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-	float num;
+	float num, thr;
+	std::vector<Coord> vessels;
+	float ves_n;
 
-	for(size_t j = 0; j < size; ++j) {
-		num = dist(gen);
-		if(num <= (init_immune_ratio / life_limit * size) && immune[0][j] == Cell::Empty) {
-			immune[1][j] = Cell::Immune;
-		}
+	vessels.clear();
 
-		num = dist(gen);
-		if(num <= (init_immune_ratio / life_limit * size) && immune[size-1][j] == Cell::Empty) {
-			immune[size-2][j] = Cell::Immune;
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(cells[i][j] == Cell::Vessel) {
+				vessels.push_back({i, j});
+			}
 		}
-	}	
+	}
+	
+	ves_n = vessels.size();
+	thr = init_immune_ratio / life_limit * ves_n;
+
+	for(auto v : vessels) {
+		num = dist(gen);
+		if(num <= thr && immune[v.x][v.y] == Cell::Empty) {
+			immune[v.x][v.y] = Cell::Immune;
+		}
+	}
+
+	//for(size_t j = 0; j < size; ++j) {
+		//num = dist(gen);
+		//if(num <= (init_immune_ratio / life_limit * size) && immune[0][j] == Cell::Empty) {
+			//immune[1][j] = Cell::Immune;
+		//}
+
+		//num = dist(gen);
+		//if(num <= (init_immune_ratio / life_limit * size) && immune[size-1][j] == Cell::Empty) {
+			//immune[size-2][j] = Cell::Immune;
+		//}
+	//}	
 }
 
 void Sim::count_cells() {
