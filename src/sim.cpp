@@ -164,12 +164,6 @@ void Sim::diffuse() {
 		max_diff = 0.0f;
 		
 		for(size_t i = 1; i < size-1; ++i) {
-			/* diffuse top row (boundary conditions) */
-			diffuse_attr(i, 0, size-1, 1, max_diff);
-
-			/* diffuse bottom row (boundary conditions) */
-			diffuse_attr(i, size-1, size-2, 0, max_diff);
-			
 			for(size_t j = 1; j < size-1; ++j) {
 				diffuse_attr(i, j, j-1, j+1, max_diff);
 			}
