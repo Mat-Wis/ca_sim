@@ -253,16 +253,17 @@ void Sim::damage_ecm() {
 }
 
 void Sim::move_immune() {
-	size_t i, j, it, nx, ny, x, y;
+	size_t i, j, nx, ny, x, y;
 	std::vector<Coord> immune_cells;
 	std::vector<Coord> nbrs;
 	std::vector<float> attr_vec;
-	std::vector<size_t> idx;
+	std::vector<float> attr_sum;
+	size_t idx;
 	
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			if(immune[i][j] == Cell::Immune) {
-				immune_cells.push_back({i, j});
+	for(size_t n = 0; n < size; ++n) {
+		for(size_t m = 0; m < size; ++m) {
+			if(immune[n][m] == Cell::Immune) {
+				immune_cells.push_back({n, m});
 			}
 		}
 	}
@@ -274,7 +275,6 @@ void Sim::move_immune() {
 
 		nbrs.clear();
 		attr_vec.clear();
-		idx.clear();
 
 		for(int n = 0; n < nbrhood; ++n) {
 			nx = static_cast<size_t>(i+nbr[n][0]);
@@ -285,21 +285,32 @@ void Sim::move_immune() {
 			}
 		}
 		
-		idx.resize(nbrs.size());
-		it = 0;
-		std::generate(idx.begin(), idx.end(), [&it]{ return it++; });
-		std::stable_sort(idx.begin(), idx.end(), [&attr_vec](size_t i1, size_t i2) {return attr_vec[i1] < attr_vec[i2]; } );
+		if(!nbrs.empty()) {
+			attr_sum.resize(nbrs.size());
+			attr_sum[0] = attr_vec[0];
+			for(size_t n = 1; n < attr_sum.size(); ++n) {
+				attr_sum[n] = attr_sum[n-1] + attr_vec[n];
+			}
+			std::uniform_real_distribution<float> dist(0.0f, attr_sum.back());
+			float val = dist(gen);
 
-		x = static_cast<size_t>(nbrs[idx.back()].x + dist_1(gen));
-		y = static_cast<size_t>(nbrs[idx.back()].y + dist_1(gen));
-		
-		if(x < size && y < size && immune[x][y] == Cell::Empty) {
-			immune[i][j] = Cell::Empty;
-			immune[x][y] = Cell::Immune;
-			kill_cnt[x][y] = kill_cnt[i][j];
-			kill_cnt[i][j] = 0;
-			life_cnt[x][y] = life_cnt[i][j];
-			life_cnt[i][j] = 0;
+			for(idx = 0; idx < attr_sum.size(); ++idx) {
+				if(val <= attr_sum[idx]) {
+					break;
+				}
+			}
+
+			x = static_cast<size_t>(nbrs[idx].x);
+			y = static_cast<size_t>(nbrs[idx].y);
+			
+			if(x < size && y < size && immune[x][y] == Cell::Empty) {
+				immune[i][j] = Cell::Empty;
+				immune[x][y] = Cell::Immune;
+				kill_cnt[x][y] = kill_cnt[i][j];
+				kill_cnt[i][j] = 0;
+				life_cnt[x][y] = life_cnt[i][j];
+				life_cnt[i][j] = 0;
+			}
 		}
 	}
 }

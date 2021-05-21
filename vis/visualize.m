@@ -33,7 +33,7 @@ title('Nutrient');
 xlim([0, sz]);
 
 subplot(dims(n, 1), dims(n, 2), 4);
-f_attr = imagesc(attr(:, :, 1), [0, 1]);
+f_attr = imagesc(attr(:, :, 1), [0, 10]);
 axis('equal');
 title('Immune attractant');
 xlim([0, sz]);
