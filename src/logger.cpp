@@ -24,11 +24,10 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.alpha2), "alpha2");
 	saveParam(&(sim.lambda), "lambda");
 	saveParam(&(sim.beta2), "beta2");
-	saveParam(&(sim.ox_surv_thr), "ox_surv_thr");
-	saveParam(&(sim.ox_prolif_thr), "ox_prolif_thr");
+	saveParam(&(sim.nutr_surv_thr), "nutr_surv_thr");
+	saveParam(&(sim.nutr_prolif_thr), "nutr_prolif_thr");
+	saveParam(&(sim.stress_thr), "stress_thr");
 
-	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
-	saveParam(&(sim.toxin_thr), "toxin_thr");
 	saveParam(&(sim.t_cycle), "t_cycle");
 	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
 	saveParam(&(sim.kill_limit), "kill_limit");

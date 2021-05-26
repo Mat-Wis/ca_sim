@@ -26,10 +26,9 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "alpha2", alpha2);
 	read_param<float>(parameters, "lambda", lambda);
 	read_param<float>(parameters, "beta2", beta2);
-	read_param<float>(parameters, "ox_surv_thr", ox_surv_thr);
-	read_param<float>(parameters, "ox_prolif_thr", ox_prolif_thr);
-	read_param<float>(parameters, "toxin_secrete_rate", toxin_secrete_rate);
-	read_param<float>(parameters, "toxin_thr", toxin_thr);
+	read_param<float>(parameters, "nutr_surv_thr", nutr_surv_thr);
+	read_param<float>(parameters, "nutr_prolif_thr", nutr_prolif_thr);
+	read_param<float>(parameters, "stress_thr", stress_thr);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<float>(parameters, "sim_time", sim_time);
 	read_param<float>(parameters, "dt", dt);
@@ -38,10 +37,11 @@ Sim::Sim(char* config_file) :
 	read_param<int>(parameters, "kill_limit", kill_limit);
 	read_param<int>(parameters, "life_limit", life_limit);
 
-	n_steps = static_cast<int>(sim_time / dt * 60.0f);
+	t_steps = static_cast<int>(t_cycle * 60.0f / dt);
+	n_steps = static_cast<int>(sim_time * 60.0f / dt);
 
 	/* fill simulation area with healthy cells */
-	for(size_t i = 1; i < size-1; ++i) {
+	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			cells[i][j] = Cell::Healthy;
 		}
@@ -53,11 +53,27 @@ Sim::Sim(char* config_file) :
 		cells[size-1][j] = Cell::Vessel;
 	}
 
-	/* add tumor cells in the center */
-	for(size_t i = size/2-10; i <= size/2+10; ++i) {
-		for(size_t j = size/2-10; j <= size/2+10; ++j) {
-			if((i-size/2)*(i-size/2) + (j-size/2)*(j-size/2) <= 25) {
-				cells[i][j] = Cell::Tumor;
+	/* add tumor cells */
+	int init_tumor = parameters["tumor_x"].getLength();
+	int x, y;
+	for(int i = 0; i < init_tumor; ++i) {
+		try {
+			x = parameters["tumor_x"][i];
+			y = parameters["tumor_y"][i];
+
+			cells[x][y] = Cell::Tumor;
+		} catch(const libconfig::SettingTypeException &stex) {
+			std::cerr << "Wrong type in tumor_x or tumor_y." << std::endl;
+			throw;
+		}
+	}
+
+	/* add immune cells */
+	std::uniform_real_distribution dist(0.0f, 1.0f);
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(dist(gen) < init_immune_ratio) {
+				immune[i][j] = Cell::Immune;
 			}
 		}
 	}
@@ -66,9 +82,9 @@ Sim::Sim(char* config_file) :
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
 			nutrient[i][j] = 0.9;
-			prolif_cnt[i][j] = 0.0;
-			kill_cnt[i][j] = 0.0;
-			life_cnt[i][j] = 0.0;
+			prolif_cnt[i][j] = 0;
+			kill_cnt[i][j] = 0;
+			life_cnt[i][j] = 0;
 			attr[i][j] = 0.0;
 		}
 	}
@@ -93,7 +109,7 @@ void Sim::read_param(const libconfig::Setting& setting, const char* name, T& var
 		std::cerr << "Setting '" << name << "' not found in configuration file." << std::endl;
 		throw;
 	} catch(const libconfig::SettingTypeException &stex) {
-		std::cerr << "Wrong type in setting '" << name << std::endl;
+		std::cerr << "Wrong type in setting '" << name << "'." << std::endl;
 		throw;
 	}
 }
@@ -245,7 +261,7 @@ void Sim::damage_ecm() {
 					x = i_vec[n];
 					y = j_vec[n];
 					
-					ecm_stress[i+x][j+y] += dist_f(gen);
+					ecm_stress[i+x][j+y] += dist_f(gen) * (dt / 20.0f);
 				}
 			}
 		}
@@ -344,7 +360,7 @@ void Sim::kill_tumor() {
 					tumor_apoptosis(i, j);
 					++kill_cnt[i][j];
 					attr[i][j] += 0.5;
-				} else if(nutrient[i][j] < ox_surv_thr) {
+				} else if(nutrient[i][j] < nutr_surv_thr) {
 					tumor_necrosis(i, j);
 				}
 			}
@@ -357,7 +373,7 @@ void Sim::kill_immune() {
 		for(size_t j = 0; j < size; ++j) {
 			if(immune[i][j] == Cell::Immune) {
 				++life_cnt[i][j];
-				if((kill_cnt[i][j] >= kill_limit || life_cnt[i][j] >= life_limit)) {
+				if((kill_cnt[i][j] >= kill_limit || life_cnt[i][j] >= life_limit || nutrient[i][j] < nutr_surv_thr)) {
 					immune_die(i, j);
 				}
 			}
@@ -368,7 +384,7 @@ void Sim::kill_immune() {
 void Sim::kill_healthy() {
 	for(size_t i = 0; i < size; ++i) {
 		for(size_t j = 0; j < size; ++j) {
-			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= 5.0f || nutrient[i][j] < ox_surv_thr)) {
+			if(cells[i][j] == Cell::Healthy && (ecm_stress[i][j] >= stress_thr || nutrient[i][j] < nutr_surv_thr)) {
 				healthy_die(i, j);
 			}
 		}
@@ -385,7 +401,7 @@ void Sim::proliferate() {
 
 	for(size_t i = 1; i < size-1; ++i) {
 		for(size_t j = 1; j < size-1; ++j) {
-			if(cells[i][j] == Cell::Tumor && nutrient[i][j] > ox_prolif_thr) {
+			if(cells[i][j] == Cell::Tumor && nutrient[i][j] > nutr_prolif_thr) {
 				tumor_cells.push_back({i, j});
 			}
 		}
@@ -397,7 +413,7 @@ void Sim::proliferate() {
 		j = c.y;
 		
 		++prolif_cnt[i][j];
-		if(prolif_cnt[i][j] >= t_cycle) {
+		if(prolif_cnt[i][j] >= t_steps) {
 			i_vec.clear();
 			j_vec.clear();
 			
@@ -418,6 +434,7 @@ void Sim::proliferate() {
 				y = j_vec[n];
 
 				cells[i+x][j+y] = Cell::Tumor;
+				prolif_cnt[i][j] = 0;
 			}
 		}
 	}
@@ -438,28 +455,17 @@ void Sim::recruit_immune() {
 			}
 		}
 	}
+
 	
 	ves_n = vessels.size();
-	thr = init_immune_ratio / life_limit * ves_n;
+	thr = (init_immune_ratio * size * size - num_immune) / ves_n;
 
 	for(auto v : vessels) {
 		num = dist(gen);
-		if(num <= thr && immune[v.x][v.y] == Cell::Empty) {
+		if((num <= thr) && (immune[v.x][v.y] == Cell::Empty)) {
 			immune[v.x][v.y] = Cell::Immune;
 		}
 	}
-
-	//for(size_t j = 0; j < size; ++j) {
-		//num = dist(gen);
-		//if(num <= (init_immune_ratio / life_limit * size) && immune[0][j] == Cell::Empty) {
-			//immune[1][j] = Cell::Immune;
-		//}
-
-		//num = dist(gen);
-		//if(num <= (init_immune_ratio / life_limit * size) && immune[size-1][j] == Cell::Empty) {
-			//immune[size-2][j] = Cell::Immune;
-		//}
-	//}	
 }
 
 void Sim::count_cells() {

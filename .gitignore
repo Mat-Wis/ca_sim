@@ -2,3 +2,9 @@ build/*
 *.mat
 *.png
 *.asv
+*.mp4
+*.gif
+vis/vis_cell.m
+vis/radius.m
+vis/crop_im.m
+vis/dbl_time.m

@@ -15,8 +15,8 @@ enum class Cell : int {
 	Healthy		= 10, 
 	Tumor		= 20,
 	DeadTumor	= 30,
-	Immune		= 40,
-	Vessel		= 50
+	Vessel		= 40,
+	Immune		= 50
 };
 
 struct Coord {
@@ -64,12 +64,12 @@ class Sim {
 		float alpha2;
 		float lambda;
 		float beta2;
-		float ox_surv_thr;
-		float ox_prolif_thr;
-		float toxin_secrete_rate;
-		float toxin_thr;
+		float nutr_surv_thr;
+		float nutr_prolif_thr;
+		float stress_thr;
 		float init_immune_ratio;
 		int t_cycle;
+		int t_steps;
 		int kill_limit;
 		int life_limit;
 
