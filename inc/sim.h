@@ -67,6 +67,7 @@ class Sim {
 		float nutr_surv_thr;
 		float nutr_prolif_thr;
 		float stress_thr;
+		float imm_rnd;
 		float init_immune_ratio;
 		int t_cycle;
 		int t_steps;
@@ -83,7 +84,6 @@ class Sim {
 
 		/* Random numbers */
 		std::default_random_engine gen;
-		std::uniform_int_distribution<int> dist_1;
 
 		/* Functions */
 		template<class T>

@@ -27,6 +27,7 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.nutr_surv_thr), "nutr_surv_thr");
 	saveParam(&(sim.nutr_prolif_thr), "nutr_prolif_thr");
 	saveParam(&(sim.stress_thr), "stress_thr");
+	saveParam(&(sim.imm_rnd), "imm_rnd");
 
 	saveParam(&(sim.t_cycle), "t_cycle");
 	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");

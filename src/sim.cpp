@@ -1,8 +1,7 @@
 #include "sim.h"
 
 Sim::Sim(char* config_file) : 
-	gen(std::chrono::system_clock::now().time_since_epoch().count()), 
-	dist_1(-1, 1)
+	gen(std::chrono::system_clock::now().time_since_epoch().count())
 {
 	libconfig::Config cfg;
 
@@ -29,6 +28,7 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "nutr_surv_thr", nutr_surv_thr);
 	read_param<float>(parameters, "nutr_prolif_thr", nutr_prolif_thr);
 	read_param<float>(parameters, "stress_thr", stress_thr);
+	read_param<float>(parameters, "imm_rnd", imm_rnd);
 	read_param<float>(parameters, "init_immune_ratio", init_immune_ratio);
 	read_param<float>(parameters, "sim_time", sim_time);
 	read_param<float>(parameters, "dt", dt);
@@ -54,29 +54,21 @@ Sim::Sim(char* config_file) :
 	}
 
 	/* add tumor cells */
-	int init_tumor = parameters["tumor_x"].getLength();
-	int x, y;
-	for(int i = 0; i < init_tumor; ++i) {
-		try {
-			x = parameters["tumor_x"][i];
-			y = parameters["tumor_y"][i];
-
-			cells[x][y] = Cell::Tumor;
-		} catch(const libconfig::SettingTypeException &stex) {
-			std::cerr << "Wrong type in tumor_x or tumor_y." << std::endl;
-			throw;
+	int R = 10;
+	int half_s = std::floor(size / 2);
+	for(int i = half_s-R; i < half_s+R; ++i) {
+		for(int j = half_s-R; j < half_s+R; ++j) {
+			if((half_s-i)*(half_s-i) + (half_s-j)*(half_s-j) <= R*R) {
+				cells[i][j] = Cell::Tumor;
+			}
 		}
 	}
 
 	/* add immune cells */
-	std::uniform_real_distribution dist(0.0f, 1.0f);
-	for(size_t i = 0; i < size; ++i) {
-		for(size_t j = 0; j < size; ++j) {
-			if(dist(gen) < init_immune_ratio) {
-				immune[i][j] = Cell::Immune;
-			}
-		}
-	}
+	//std::uniform_real_distribution dist(0.0f, 1.0f);
+	std::uniform_int_distribution<size_t> dist(0, size-1);
+	size_t xi = dist(gen), yi = dist(gen);
+	immune[xi][yi] = Cell::Immune;
 
 	/* initialize all other layers */
 	for(size_t i = 0; i < size; ++i) {
@@ -269,12 +261,11 @@ void Sim::damage_ecm() {
 }
 
 void Sim::move_immune() {
-	size_t i, j, nx, ny, x, y;
+	size_t i, j, x, y;
 	std::vector<Coord> immune_cells;
-	std::vector<Coord> nbrs;
-	std::vector<float> attr_vec;
-	std::vector<float> attr_sum;
-	size_t idx;
+	float gx, gy, rndx, rndy, rnd_norm, vecx, vecy, angle;
+	int n_angle;
+	std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
 	
 	for(size_t n = 0; n < size; ++n) {
 		for(size_t m = 0; m < size; ++m) {
@@ -289,44 +280,70 @@ void Sim::move_immune() {
 		i = c.x;
 		j = c.y;
 
-		nbrs.clear();
-		attr_vec.clear();
+		if(i == 0) {
+			gx = attr[i+1][j] - attr[i][j];
+		} else if(i == size-1) {
+			gx = attr[i][j] - attr[i-1][j];
+		} else {
+			gx = (attr[i+1][j] - attr[i-1][j]) / 2;
+		}
 
-		for(int n = 0; n < nbrhood; ++n) {
-			nx = static_cast<size_t>(i+nbr[n][0]);
-			ny = static_cast<size_t>(j+nbr[n][1]);
-			if(nx < size && ny < size) {
-				attr_vec.push_back(attr[nx][ny]);
-				nbrs.push_back({nx, ny});
-			}
+		if(j == 0) {
+			gy = attr[i][j+1] - attr[i][j];
+		} else if(j == size-1) {
+			gy = attr[i][j] - attr[i][j-1];
+		} else {
+			gy = (attr[i][j+1] - attr[i][j-1]) / 2;
 		}
 		
-		if(!nbrs.empty()) {
-			attr_sum.resize(nbrs.size());
-			attr_sum[0] = attr_vec[0];
-			for(size_t n = 1; n < attr_sum.size(); ++n) {
-				attr_sum[n] = attr_sum[n-1] + attr_vec[n];
-			}
-			std::uniform_real_distribution<float> dist(0.0f, attr_sum.back());
-			float val = dist(gen);
+		rndx = dist(gen);
+		rndy = dist(gen);
+		rnd_norm = std::sqrt(rndx*rndx + rndy*rndy) / imm_rnd;
+		rndx /= rnd_norm;
+		rndy /= rnd_norm;
+		
+		vecx = gx + rndx;
+		vecy = gy + rndy;
 
-			for(idx = 0; idx < attr_sum.size(); ++idx) {
-				if(val <= attr_sum[idx]) {
-					break;
-				}
-			}
+		angle = std::atan2(vecx, vecy);
+		n_angle = std::floor(angle / (M_PI / 8.0f));
+		
+		switch(n_angle) {
+			case 7:
+			case -8:
+				x = i; y = j-1; break;
+			case -7:
+			case -6:
+				x = i-1; y = j-1; break;
+			case -5:
+			case -4:
+				x = i-1; y = j; break;
+			case -3:
+			case -2:
+				x = i-1; y = j+1; break;
+			case -1:
+			case 0:
+				x = i; y = j+1; break;
+			case 1:
+			case 2:
+				x = i+1; y = j+1; break;
+			case 3:
+			case 4:
+				x = i+1; y = j; break;
+			case 5:
+			case 6:
+				x = i+1; y = j-1; break;
+			default:
+				x = i; y = j; break;
+		}
 
-			x = static_cast<size_t>(nbrs[idx].x);
-			y = static_cast<size_t>(nbrs[idx].y);
-			
-			if(x < size && y < size && immune[x][y] == Cell::Empty) {
-				immune[i][j] = Cell::Empty;
-				immune[x][y] = Cell::Immune;
-				kill_cnt[x][y] = kill_cnt[i][j];
-				kill_cnt[i][j] = 0;
-				life_cnt[x][y] = life_cnt[i][j];
-				life_cnt[i][j] = 0;
-			}
+		if(x >= 0 && x < size && y >= 0 && y < size && immune[x][y] == Cell::Empty) {
+			immune[i][j] = Cell::Empty;
+			immune[x][y] = Cell::Immune;
+			kill_cnt[x][y] = kill_cnt[i][j];
+			kill_cnt[i][j] = 0;
+			life_cnt[x][y] = life_cnt[i][j];
+			life_cnt[i][j] = 0;
 		}
 	}
 }
