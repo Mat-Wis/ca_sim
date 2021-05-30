@@ -68,16 +68,16 @@ for i = 1:size(cells, 3)
     sgtitle(print_time(i, dt));
     
     drawnow;
-    
-%     frame = getframe(f);
-%     im = frame2im(frame); 
-%     [imind,cm] = rgb2ind(im,256); 
-%     % Write to the GIF File 
-%     if i == 1
-%         imwrite(imind, cm, 'imm_cell0.gif','gif', 'Loopcount', inf, 'DelayTime', 0.1); 
-%     else 
-%         imwrite(imind, cm, 'imm_cell0.gif','gif','WriteMode','append', 'DelayTime', 0.1); 
-%     end 
+     
+    frame = getframe(f);
+    im = frame2im(frame); 
+    [imind,cm] = rgb2ind(im,256); 
+    % Write to the GIF File 
+    if i == 1
+        imwrite(imind, cm, 'chemotax1.gif','gif', 'Loopcount', inf, 'DelayTime', 0.1); 
+    else 
+        imwrite(imind, cm, 'chemotax1.gif','gif','WriteMode','append', 'DelayTime', 0.1); 
+    end 
 end
 
 function str = print_time(i, dt)
