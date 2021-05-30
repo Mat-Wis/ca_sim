@@ -29,6 +29,8 @@ Logger::Logger(Sim& sim) {
 	saveParam(&(sim.stress_thr), "stress_thr");
 	saveParam(&(sim.imm_rnd), "imm_rnd");
 
+	saveParam(&(sim.toxin_secrete_rate), "toxin_secrete_rate");
+	saveParam(&(sim.toxin_thr), "toxin_thr");
 	saveParam(&(sim.t_cycle), "t_cycle");
 	saveParam(&(sim.init_immune_ratio), "init_immune_ratio");
 	saveParam(&(sim.kill_limit), "kill_limit");

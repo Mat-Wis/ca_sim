@@ -2,6 +2,7 @@ build/*
 *.mat
 *.png
 *.asv
+<<<<<<< HEAD
 *.mp4
 *.gif
 vis/vis_cell.m
@@ -9,3 +10,5 @@ vis/radius.m
 vis/crop_im.m
 vis/dbl_time.m
 vis/vis_immune.m
+=======
+>>>>>>> parent of 76bb31a (Changed immune cell recruitment process to maintain constant immune cell level)
