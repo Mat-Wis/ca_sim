@@ -73,6 +73,7 @@ class Sim {
 		int t_steps;
 		int kill_limit;
 		int life_limit;
+		int life_steps;
 		bool vessels_on_borders;
 		float vessel_num;
 

@@ -26,30 +26,40 @@ colormap(cell_ax, map);
 axis('equal');
 title('Cells');
 xlim([0, sz]);
+xticks(0:floor(sz / 5):sz);
+yticks(0:floor(sz / 5):sz);
 
 subplot(dims(n, 1), dims(n, 2), 2);
 f_immune = imagesc(immune(:, : ,1), [0, 30]);
 axis('equal');
 title('Immune cells');
 xlim([0, sz]);
+xticks(0:floor(sz / 5):sz);
+yticks(0:floor(sz / 5):sz);
 
 subplot(dims(n, 1), dims(n, 2), 3);
 f_ox = imagesc(nutrient(:, :, 1), [0, 1]);
 axis('equal');
 title('Nutrient');
 xlim([0, sz]);
+xticks(0:floor(sz / 5):sz);
+yticks(0:floor(sz / 5):sz);
 
 subplot(dims(n, 1), dims(n, 2), 4);
 f_attr = imagesc(attr(:, :, 1), [0, 10]);
 axis('equal');
 title('Immune attractant');
 xlim([0, sz]);
+xticks(0:floor(sz / 5):sz);
+yticks(0:floor(sz / 5):sz);
 
 subplot(dims(n, 1), dims(n, 2), 5);
 f_ecm = imagesc(ecm_stress(:, :, 1), [0, stress_thr]);
 axis('equal');
 title('ECM stress');
 xlim([0, sz]);
+xticks(0:floor(sz / 5):sz);
+yticks(0:floor(sz / 5):sz);
 
 sgtitle(print_time(0, dt));
 
@@ -69,15 +79,15 @@ for i = 1:size(cells, 3)
     
     drawnow;
      
-    frame = getframe(f);
-    im = frame2im(frame); 
-    [imind,cm] = rgb2ind(im,256); 
-    % Write to the GIF File 
-    if i == 1
-        imwrite(imind, cm, 'vessel_dist.gif','gif', 'Loopcount', inf, 'DelayTime', 0.1); 
-    else 
-        imwrite(imind, cm, 'vessel_dist.gif','gif','WriteMode','append', 'DelayTime', 0.1); 
-    end 
+%     frame = getframe(f);
+%     im = frame2im(frame); 
+%     [imind,cm] = rgb2ind(im,256); 
+%     % Write to the GIF File 
+%     if i == 1
+%         imwrite(imind, cm, 'vessel_dist.gif','gif', 'Loopcount', inf, 'DelayTime', 0.1); 
+%     else 
+%         imwrite(imind, cm, 'vessel_dist.gif','gif','WriteMode','append', 'DelayTime', 0.1); 
+%     end 
 end
 
 function str = print_time(i, dt)
