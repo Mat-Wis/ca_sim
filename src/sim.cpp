@@ -36,6 +36,8 @@ Sim::Sim(char* config_file) :
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
 	read_param<int>(parameters, "life_limit", life_limit);
+	read_param<bool>(parameters, "vessels_on_borders", vessels_on_borders);
+	read_param<float>(parameters, "vessel_num", vessel_num);
 	
 	t_steps = static_cast<int>(t_cycle * 60.0f / dt);
 	n_steps = static_cast<int>(sim_time * 60.0f / dt);
@@ -47,12 +49,6 @@ Sim::Sim(char* config_file) :
 		}
 	}
 	
-	/* add blood vessels */
-	for(size_t j = 0; j < size; ++j) {
-		cells[0][j] = Cell::Vessel;
-		cells[size-1][j] = Cell::Vessel;
-	}
-
 	/* add tumor cells */
 	int init_tumor = parameters["tumor_x"].getLength();
 	int x, y;
@@ -65,6 +61,37 @@ Sim::Sim(char* config_file) :
 		} catch(const libconfig::SettingTypeException &stex) {
 			std::cerr << "Wrong type in tumor_x or tumor_y." << std::endl;
 			throw;
+		}
+	}
+
+	/* add blood vessels */
+	if(vessels_on_borders) {
+		for(size_t j = 0; j < size; ++j) {
+			cells[0][j] = Cell::Vessel;
+			cells[size-1][j] = Cell::Vessel;
+		}
+	} else {
+		std::uniform_real_distribution<float> dist_v(0.0f, 1.0f);
+		float thr = vessel_num * static_cast<float>(size*size) / (size*size - init_tumor);
+		int R = 20;
+		bool clear = true;
+
+		for(size_t i = 0; i < size; ++i) {
+			for(size_t j = 0; j < size; ++j) {
+				if(dist_v(gen) < thr) {
+					clear = true;
+					for(int m = -R; m <= R; ++m) {
+						for(int n = -R; n <= R; ++n) {
+							if((m*m + n*n <= R*R) && (i+m >= 0) && (i+m < size) && (j+n >= 0) && (j+n < size) && cells[i+m][j+n] == Cell::Tumor) {
+								clear = false;
+							}
+						}
+					}
+					if(clear) {
+						cells[i][j] = Cell::Vessel;
+					}
+				}
+			}
 		}
 	}
 

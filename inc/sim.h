@@ -73,6 +73,8 @@ class Sim {
 		int t_steps;
 		int kill_limit;
 		int life_limit;
+		bool vessels_on_borders;
+		float vessel_num;
 
 		/* Neighbourhood*/
 		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};
