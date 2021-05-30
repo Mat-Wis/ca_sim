@@ -65,10 +65,14 @@ Sim::Sim(char* config_file) :
 	}
 
 	/* add immune cells */
-	//std::uniform_real_distribution dist(0.0f, 1.0f);
-	std::uniform_int_distribution<size_t> dist(0, size-1);
-	size_t xi = dist(gen), yi = dist(gen);
-	immune[xi][yi] = Cell::Immune;
+	std::uniform_real_distribution dist(0.0f, 1.0f);
+	for(size_t i = 0; i < size; ++i) {
+		for(size_t j = 0; j < size; ++j) {
+			if(dist(gen) < init_immune_ratio) {
+				immune[i][j] = Cell::Immune;
+			}
+		}
+	}
 
 	/* initialize all other layers */
 	for(size_t i = 0; i < size; ++i) {
