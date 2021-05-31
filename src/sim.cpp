@@ -238,7 +238,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.00001) {
+		if(max_diff < 0.0001) {
 			break;
 		}
 	}
@@ -254,7 +254,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.00001) {
+		if(max_diff < 0.0001) {
 			break;
 		}
 	}
