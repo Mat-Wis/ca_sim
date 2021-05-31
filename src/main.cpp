@@ -30,6 +30,10 @@ int main()
 		if(n % 100 == 0) {
 			std::cout << "n = " << n << std::endl;
 		}
+
+		if(sim.tumor_killed()) {
+			break;
+		}
 	}
 
 	return 0;

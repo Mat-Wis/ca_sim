@@ -412,7 +412,6 @@ void Sim::kill_tumor() {
 				if(immune[i][j] == Cell::Immune) {
 					tumor_apoptosis(i, j);
 					++kill_cnt[i][j];
-					attr[i][j] += 0.5;
 				} else if(nutrient[i][j] < nutr_surv_thr) {
 					tumor_necrosis(i, j);
 				}
@@ -544,4 +543,8 @@ void Sim::count_cells() {
 			}
 		}
 	}
+}
+
+bool Sim::tumor_killed() {
+	return num_tumor == 0;
 }
