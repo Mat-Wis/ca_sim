@@ -11,3 +11,4 @@ link_directories( /usr/local/lib )
 
 add_executable( ca_sim src/main.cpp src/logger.cpp src/sim.cpp )
 target_link_libraries( ca_sim matio config++ )
+

@@ -1,6 +1,6 @@
 close all
 clear variables
-load('data.mat');
+load('data_mat.mat');
 
 n = 5;
 dims = [1, 1;

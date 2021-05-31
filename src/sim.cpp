@@ -21,7 +21,8 @@ Sim::Sim(char* config_file) :
 	const libconfig::Setting& parameters = root["parameters"];
 
 	/* read all parameters */
-	read_param<std::string>(root, "logfile", logfile);
+	read_param<std::string>(root, "mat_file", mat_file);
+	read_param<std::string>(root, "num_file", num_file);
 	read_param<float>(parameters, "alpha2", alpha2);
 	read_param<float>(parameters, "lambda", lambda);
 	read_param<float>(parameters, "beta2", beta2);
@@ -524,6 +525,7 @@ void Sim::recruit_immune() {
 void Sim::count_cells() {
 	num_healthy = 0;
 	num_tumor = 0;
+	num_deadtumor = 0;
 	num_immune = 0;
 
 	for(size_t i = 0; i < size; ++i) {
@@ -537,6 +539,9 @@ void Sim::count_cells() {
 					break;
 				case Cell::Tumor:
 					++num_tumor;
+					break;
+				case Cell::DeadTumor:
+					++num_deadtumor;
 					break;
 				default:
 					break;

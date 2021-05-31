@@ -12,7 +12,8 @@ class Logger {
 		void log_mat();
 
 	private:
-		mat_t* file;
+		mat_t* mat_file;
+		mat_t* num_file;
 		matvar_t* cells_var;
 		matvar_t* immune_var;
 		matvar_t* nutrient_var;
@@ -20,6 +21,7 @@ class Logger {
 		matvar_t* ecm_var;
 		matvar_t* num_healthy_var;
 		matvar_t* num_tumor_var;
+		matvar_t* num_deadtumor_var;
 		matvar_t* num_immune_var;
 
 		void saveParam(int* var, const char* name);

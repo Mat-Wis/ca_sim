@@ -84,6 +84,7 @@ class Sim {
 		/* Cell numbers */
 		int num_healthy;
 		int num_tumor;
+		int num_deadtumor;
 		int num_immune;
 
 		/* Random numbers */
@@ -102,5 +103,6 @@ class Sim {
 		void diffuse_attr(size_t i, size_t j, float& max_diff);
 
 		friend class Logger;
-		std::string logfile;
+		std::string mat_file;
+		std::string num_file;
 };
