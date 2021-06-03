@@ -79,6 +79,17 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
+	int R = 15;
+	int cx = 100, cy = 100;
+	for(int i = -R; i <= R; ++i) {
+		for(int j = -R; j <= R; ++j) {
+			if(i*i + j*j <= R*R) {
+				cells[cx+i][cy+j] = Cell::Tumor;
+				prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
+			}
+		}
+	}
+
 	/* add blood vessels */
 	if(vessels_on_borders) {
 		for(size_t j = 0; j < size; ++j) {
@@ -538,7 +549,9 @@ void Sim::count_cells() {
 					++num_healthy;
 					break;
 				case Cell::Tumor:
-					++num_tumor;
+					if(j < 60) {
+						++num_tumor;
+					}
 					break;
 				case Cell::DeadTumor:
 					++num_deadtumor;
