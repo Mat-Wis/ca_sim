@@ -42,9 +42,10 @@ class Sim {
 
 		int n_steps;
 		int log_step;
+		bool log_mat;
 
 	private:
-		static constexpr size_t size = 200;
+		static constexpr size_t size = 100;
 		static constexpr int nbrhood = 8;
 		
 		/* Matrices */

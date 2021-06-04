@@ -34,6 +34,7 @@ Sim::Sim(char* config_file) :
 	read_param<float>(parameters, "sim_time", sim_time);
 	read_param<float>(parameters, "dt", dt);
 	read_param<int>(parameters, "log_step", log_step);
+	read_param<bool>(parameters, "log_mat", log_mat);
 	read_param<int>(parameters, "t_cycle", t_cycle);
 	read_param<int>(parameters, "kill_limit", kill_limit);
 	read_param<int>(parameters, "life_limit", life_limit);
@@ -79,16 +80,16 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
-	int R = 15;
-	int cx = 100, cy = 100;
-	for(int i = -R; i <= R; ++i) {
-		for(int j = -R; j <= R; ++j) {
-			if(i*i + j*j <= R*R) {
-				cells[cx+i][cy+j] = Cell::Tumor;
-				prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
-			}
-		}
-	}
+	//int R = 15;
+	//int cx = 100, cy = 100;
+	//for(int i = -R; i <= R; ++i) {
+		//for(int j = -R; j <= R; ++j) {
+			//if(i*i + j*j <= R*R) {
+				//cells[cx+i][cy+j] = Cell::Tumor;
+				//prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
+			//}
+		//}
+	//}
 
 	/* add blood vessels */
 	if(vessels_on_borders) {
@@ -549,9 +550,9 @@ void Sim::count_cells() {
 					++num_healthy;
 					break;
 				case Cell::Tumor:
-					if(j < 60) {
+					//if(j < 90) {
 						++num_tumor;
-					}
+					//}
 					break;
 				case Cell::DeadTumor:
 					++num_deadtumor;

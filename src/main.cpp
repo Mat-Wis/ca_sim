@@ -23,7 +23,7 @@ int main()
 
 		logger.log_num();
 
-		if(n % sim.log_step == 0) {
+		if(sim.log_mat && n % sim.log_step == 0) {
 			logger.log_mat();
 		}
 
