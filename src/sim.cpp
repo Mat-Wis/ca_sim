@@ -80,16 +80,16 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
-	//int R = 15;
-	//int cx = 100, cy = 100;
-	//for(int i = -R; i <= R; ++i) {
-		//for(int j = -R; j <= R; ++j) {
-			//if(i*i + j*j <= R*R) {
-				//cells[cx+i][cy+j] = Cell::Tumor;
-				//prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
-			//}
-		//}
-	//}
+	int R = 10;
+	int cx = 50, cy = 50;
+	for(int i = -R; i <= R; ++i) {
+		for(int j = -R; j <= R; ++j) {
+			if(i*i + j*j <= R*R) {
+				cells[cx+i][cy+j] = Cell::Tumor;
+				prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
+			}
+		}
+	}
 
 	/* add blood vessels */
 	if(vessels_on_borders) {
@@ -251,7 +251,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.0001) {
+		if(max_diff < 0.00001) {
 			break;
 		}
 	}
@@ -267,7 +267,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.0001) {
+		if(max_diff < 0.00001) {
 			break;
 		}
 	}

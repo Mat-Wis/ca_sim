@@ -1,5 +1,5 @@
 close all
-clearvars -except final_size*
+clear variables
 
 N = 100;
 
@@ -18,3 +18,6 @@ end
 histogram(final_size);
 xlabel('Number of tumor cells after 200 hours');
 ylabel('Number of simulations');
+
+m = matfile('immune_speed_i10.mat', 'Writable', true);
+m.dt15 = final_size;
