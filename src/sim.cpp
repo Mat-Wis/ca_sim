@@ -160,15 +160,20 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, float& max_diff) {
 		return;
 	}
 
-	const float diff_dt = 0.01;
-	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
+	const float diff_dt = 0.1;
+	float A = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
-						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
-				temp_float[i][j];
+						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)); 
 
-	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
+	float nabla2 = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
 
-	nutrient[i][j] += (d - c) * diff_dt;
+	float r = temp_float[i][j];
+	float k1 = nabla2 - A*r;
+	float k2 = nabla2 - A*(r + diff_dt*k1/2);
+	float k3 = nabla2 - A*(r + diff_dt*k2/2);
+	float k4 = nabla2 - A*(r + diff_dt*k3);
+
+	nutrient[i][j] = r + 1.0f/6.0f * diff_dt * (k1 + 2*k2 + 2*k3 + k4);;
 
 	if(nutrient[i][j] < 0.0f) {
 		nutrient[i][j] = 0.0f;
@@ -185,15 +190,20 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t
 		return;
 	}
 
-	const float diff_dt = 0.01;
-	float c = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
+	const float diff_dt = 0.1;
+	float A = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
-						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)) * 
-				temp_float[i][j];
+						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)); 
 
-	float d = temp_float[i_m][j] + temp_float[i_p][j] + temp_float[i][j_m] + temp_float[i][j_p] - 4 * temp_float[i][j];
+	float nabla2 = temp_float[i_m][j] + temp_float[i_p][j] + temp_float[i][j_m] + temp_float[i][j_p] - 4 * temp_float[i][j];
 
-	nutrient[i][j] += (d - c) * diff_dt;
+	float r = temp_float[i][j];
+	float k1 = nabla2 - A*r;
+	float k2 = nabla2 - A*(r + diff_dt*k1/2);
+	float k3 = nabla2 - A*(r + diff_dt*k2/2);
+	float k4 = nabla2 - A*(r + diff_dt*k3);
+
+	nutrient[i][j] = r + 1.0f/6.0f * diff_dt * (k1 + 2*k2 + 2*k3 + k4);;
 
 	if(nutrient[i][j] < 0.0f) {
 		nutrient[i][j] = 0.0f;
@@ -206,10 +216,11 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t
 }
 
 inline void Sim::diffuse_attr(size_t i, size_t j, float& max_diff) {
-	float c = beta2 * static_cast<float>(cells[i][j] == Cell::Tumor || cells[i][j] == Cell::DeadTumor);
-	float d = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1];
+	const float diff_dt = 0.1;
+	float A = beta2 * static_cast<float>(cells[i][j] == Cell::Tumor || cells[i][j] == Cell::DeadTumor);
+	float nabla2 = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
 	
-	attr[i][j] = (d + c) / 4.0f;
+	attr[i][j] = temp_float[i][j] + diff_dt * (nabla2 + A);
 	
 	if(attr[i][j] < 0) {
 		attr[i][j] = 0;
@@ -225,7 +236,8 @@ void Sim::diffuse() {
 	float max_diff;
 	
 	/* Diffuse nutrient */
-	for(int n = 0; n < 1000; ++n) {
+	size_t n;
+	for(n = 0; n < 100000; ++n) {
 		std::memcpy(temp_float, nutrient, size * size * sizeof(float));
 		max_diff = 0.0f;
 		
@@ -251,13 +263,14 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.00001) {
+		if(max_diff < 0.0000003) {
 			break;
 		}
 	}
+	std::cout << n << std::endl;
 	
 	/* Diffuse attractant */
-	for(int n = 0; n < 1000; ++n) {
+	for(size_t n = 0; n < 100000; ++n) {
 		std::memcpy(temp_float, attr, size * size * sizeof(float));
 		max_diff = 0.0f;
 		
@@ -267,7 +280,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.00001) {
+		if(max_diff < 0.000001) {
 			break;
 		}
 	}
