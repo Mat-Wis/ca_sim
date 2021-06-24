@@ -4,9 +4,10 @@
 
 char config_file[] = "../config.cfg";
 
-int main()
+int main(int argc, char** argv)
 {
 	Sim sim(config_file);
+
 	Logger logger(sim);
 
 	for(int n = 0; n < sim.n_steps; ++n) {

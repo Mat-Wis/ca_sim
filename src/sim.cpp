@@ -64,7 +64,7 @@ Sim::Sim(char* config_file) :
 	}
 	
 	/* add tumor cells */
-	std::uniform_int_distribution<int> dist_prolif(static_cast<int>(-2 * 60.0f / dt), static_cast<int>(2));
+	std::uniform_int_distribution<int> dist_prolif(static_cast<int>(-2 * 60.0f / dt), t_steps);
 	int init_tumor = parameters["tumor_x"].getLength();
 	int x, y;
 	for(int i = 0; i < init_tumor; ++i) {
@@ -80,17 +80,6 @@ Sim::Sim(char* config_file) :
 		}
 	}
 
-	int R = 10;
-	int cx = 50, cy = 50;
-	for(int i = -R; i <= R; ++i) {
-		for(int j = -R; j <= R; ++j) {
-			if(i*i + j*j <= R*R) {
-				cells[cx+i][cy+j] = Cell::Tumor;
-				prolif_cnt[cx+i][cy+j] = dist_prolif(gen);
-			}
-		}
-	}
-
 	/* add blood vessels */
 	if(vessels_on_borders) {
 		for(size_t j = 0; j < size; ++j) {
@@ -102,12 +91,14 @@ Sim::Sim(char* config_file) :
 	} else {
 		std::uniform_real_distribution<float> dist_v(0.0f, 1.0f);
 		float thr = vessel_num * static_cast<float>(size*size) / (size*size - init_tumor);
-		int R = 20;
+		int R = 10;
 		bool clear = true;
+		float val;
 
 		for(size_t i = 0; i < size; ++i) {
 			for(size_t j = 0; j < size; ++j) {
-				if(dist_v(gen) < thr) {
+				val = dist_v(gen);
+				if((j <= 85 && val < thr) || (j >= 85 && val < 3*thr)) {
 					clear = true;
 					for(int m = -R; m <= R; ++m) {
 						for(int n = -R; n <= R; ++n) {
@@ -160,7 +151,6 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, float& max_diff) {
 		return;
 	}
 
-	const float diff_dt = 0.1;
 	float A = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
 						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)); 
@@ -190,7 +180,6 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t
 		return;
 	}
 
-	const float diff_dt = 0.1;
 	float A = alpha2 * (static_cast<float>(cells[i][j] == Cell::Healthy) +
 					   	static_cast<float>(immune[i][j] == Cell::Immune) + 
 						lambda * static_cast<float>(cells[i][j] == Cell::Tumor)); 
@@ -216,7 +205,6 @@ inline void Sim::diffuse_nutr(size_t i, size_t j, size_t i_m, size_t i_p, size_t
 }
 
 inline void Sim::diffuse_attr(size_t i, size_t j, float& max_diff) {
-	const float diff_dt = 0.1;
 	float A = beta2 * static_cast<float>(cells[i][j] == Cell::Tumor || cells[i][j] == Cell::DeadTumor);
 	float nabla2 = temp_float[i-1][j] + temp_float[i+1][j] + temp_float[i][j-1] + temp_float[i][j+1] - 4 * temp_float[i][j];
 	
@@ -267,8 +255,7 @@ void Sim::diffuse() {
 			break;
 		}
 	}
-	std::cout << n << std::endl;
-	
+
 	/* Diffuse attractant */
 	for(size_t n = 0; n < 100000; ++n) {
 		std::memcpy(temp_float, attr, size * size * sizeof(float));
@@ -280,7 +267,7 @@ void Sim::diffuse() {
 			}
 		}
 
-		if(max_diff < 0.000001) {
+		if(max_diff < 0.0000003) {
 			break;
 		}
 	}
@@ -563,9 +550,9 @@ void Sim::count_cells() {
 					++num_healthy;
 					break;
 				case Cell::Tumor:
-					//if(j < 90) {
+					if(j < 70) {
 						++num_tumor;
-					//}
+					}
 					break;
 				case Cell::DeadTumor:
 					++num_deadtumor;

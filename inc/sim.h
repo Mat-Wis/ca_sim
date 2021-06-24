@@ -45,7 +45,7 @@ class Sim {
 		bool log_mat;
 
 	private:
-		static constexpr size_t size = 100;
+		static constexpr size_t size = 200;
 		static constexpr int nbrhood = 8;
 		
 		/* Matrices */
@@ -78,6 +78,7 @@ class Sim {
 		int life_steps;
 		bool vessels_on_borders;
 		float vessel_num;
+		const float diff_dt = 0.2;
 
 		/* Neighbourhood*/
 		static constexpr int nbr[][2] = {{-1, -1}, {-1, 0}, {-1, 1}, {0, -1}, {0, 1}, {1, -1}, {1, 0}, {1, 1}};

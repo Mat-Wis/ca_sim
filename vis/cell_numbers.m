@@ -1,5 +1,5 @@
 close all
-clear variables
+% clear variables
 load('data_num.mat');
 
 figure('units', 'normalized', 'outerposition', [0 0 1 1]);
